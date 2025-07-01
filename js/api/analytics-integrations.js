@@ -1,28 +1,42 @@
 // Analytics Integrations Module (Google Search Console & Google Analytics)
 
-// Test Google Search Console connection
-async function testGSCConnection() {
-    // Try both setup wizard and integrations section
-    const apiKey = document.getElementById('gscApiKey')?.value || 
-                   document.getElementById('gscApiKeyIntegrations')?.value;
+// Generic function to test API connections
+async function testApiConnection(config) {
+    const {
+        apiKeyElementIds,
+        statusKey,
+        apiEndpoint,
+        dashboardApiKey,
+        dashboardStatusKey,
+        fetchDataFunction,
+        serviceName,
+        errorMessage = 'Invalid API key or permissions'
+    } = config;
+    
+    // Try to get API key from multiple possible element IDs
+    let apiKey;
+    for (const elementId of apiKeyElementIds) {
+        apiKey = document.getElementById(elementId)?.value;
+        if (apiKey) break;
+    }
     
     if (!apiKey) {
         if (typeof updateConnectionStatus === 'function') {
-            updateConnectionStatus('gscStatus', 'error', 'Please enter an API key');
+            updateConnectionStatus(statusKey, 'error', 'Please enter an API key');
         }
         return;
     }
     
     if (typeof updateConnectionStatus === 'function') {
-        updateConnectionStatus('gscStatus', 'testing', 'Testing connection...');
+        updateConnectionStatus(statusKey, 'testing', 'Testing connection...');
     }
     
     try {
         // Store API key
-        dashboardState.apiKeys.googleSearchConsole = apiKey;
+        dashboardState.apiKeys[dashboardApiKey] = apiKey;
         
         // Test the API connection via backend
-        const response = await fetch('/api/test-google-search-console', {
+        const response = await fetch(apiEndpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -36,150 +50,74 @@ async function testGSCConnection() {
         const result = await response.json();
         
         if (result.status === 'success') {
-            dashboardState.apiStatus.googleSearchConsole = 'connected';
+            dashboardState.apiStatus[dashboardStatusKey] = 'connected';
             if (typeof updateConnectionStatus === 'function') {
-                updateConnectionStatus('gscStatus', 'success', 'Connected successfully');
+                updateConnectionStatus(statusKey, 'success', 'Connected successfully');
             }
             
-            // Fetch initial data
-            await fetchGSCData();
+            // Fetch initial data if fetch function is provided
+            if (fetchDataFunction) {
+                await fetchDataFunction();
+            }
         } else {
-            dashboardState.apiStatus.googleSearchConsole = 'error';
+            dashboardState.apiStatus[dashboardStatusKey] = 'error';
             if (typeof updateConnectionStatus === 'function') {
-                updateConnectionStatus('gscStatus', 'error', result.message || 'Invalid API key or permissions');
+                updateConnectionStatus(statusKey, 'error', result.message || errorMessage);
             }
         }
     } catch (error) {
-        dashboardState.apiStatus.googleSearchConsole = 'error';
+        dashboardState.apiStatus[dashboardStatusKey] = 'error';
         if (typeof updateConnectionStatus === 'function') {
-            updateConnectionStatus('gscStatus', 'error', 'Connection failed');
+            updateConnectionStatus(statusKey, 'error', 'Connection failed');
         }
-        console.error('Google Search Console connection test failed:', error);
+        console.error(`${serviceName} connection test failed:`, error);
     }
     
     if (typeof saveToLocalStorage === 'function') {
         saveToLocalStorage();
     }
+}
+
+// Test Google Search Console connection
+async function testGSCConnection() {
+    return testApiConnection({
+        apiKeyElementIds: ['gscApiKey', 'gscApiKeyIntegrations'],
+        statusKey: 'gscStatus',
+        apiEndpoint: '/api/test-google-search-console',
+        dashboardApiKey: 'googleSearchConsole',
+        dashboardStatusKey: 'googleSearchConsole',
+        fetchDataFunction: fetchGSCData,
+        serviceName: 'Google Search Console',
+        errorMessage: 'Invalid API key or permissions'
+    });
 }
 
 // Test Google Analytics connection
 async function testGAConnection() {
-    const apiKey = document.getElementById('gaApiKey')?.value;
-    
-    if (!apiKey) {
-        if (typeof updateConnectionStatus === 'function') {
-            updateConnectionStatus('gaStatus', 'error', 'Please enter an API key');
-        }
-        return;
-    }
-    
-    if (typeof updateConnectionStatus === 'function') {
-        updateConnectionStatus('gaStatus', 'testing', 'Testing connection...');
-    }
-    
-    try {
-        // Store API key
-        dashboardState.apiKeys.googleAnalytics = apiKey;
-        
-        // Test the API connection via backend
-        const response = await fetch('/api/test-google-analytics', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                api_key: apiKey
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-            dashboardState.apiStatus.googleAnalytics = 'connected';
-            if (typeof updateConnectionStatus === 'function') {
-                updateConnectionStatus('gaStatus', 'success', 'Connected successfully');
-            }
-            
-            // Fetch initial data
-            await fetchGAData();
-        } else {
-            dashboardState.apiStatus.googleAnalytics = 'error';
-            if (typeof updateConnectionStatus === 'function') {
-                updateConnectionStatus('gaStatus', 'error', result.message || 'Invalid API key or permissions');
-            }
-        }
-    } catch (error) {
-        dashboardState.apiStatus.googleAnalytics = 'error';
-        if (typeof updateConnectionStatus === 'function') {
-            updateConnectionStatus('gaStatus', 'error', 'Connection failed');
-        }
-        console.error('Google Analytics connection test failed:', error);
-    }
-    
-    if (typeof saveToLocalStorage === 'function') {
-        saveToLocalStorage();
-    }
+    return testApiConnection({
+        apiKeyElementIds: ['gaApiKey'],
+        statusKey: 'gaStatus',
+        apiEndpoint: '/api/test-google-analytics',
+        dashboardApiKey: 'googleAnalytics',
+        dashboardStatusKey: 'googleAnalytics',
+        fetchDataFunction: fetchGAData,
+        serviceName: 'Google Analytics',
+        errorMessage: 'Invalid API key or permissions'
+    });
 }
 
 // Test GA4 connection (modern Google Analytics)
 async function testGA4Connection() {
-    const apiKey = document.getElementById('ga4ApiKey')?.value;
-    
-    if (!apiKey) {
-        if (typeof updateConnectionStatus === 'function') {
-            updateConnectionStatus('ga4Status', 'error', 'Please enter an API key');
-        }
-        return;
-    }
-    
-    if (typeof updateConnectionStatus === 'function') {
-        updateConnectionStatus('ga4Status', 'testing', 'Testing connection...');
-    }
-    
-    try {
-        // Store API key
-        dashboardState.apiKeys.googleAnalyticsGA4 = apiKey;
-        
-        // Test the API connection via backend
-        const response = await fetch('/api/test-ga4', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                api_key: apiKey
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-            dashboardState.apiStatus.googleAnalyticsGA4 = 'connected';
-            if (typeof updateConnectionStatus === 'function') {
-                updateConnectionStatus('ga4Status', 'success', 'Connected successfully');
-            }
-            
-            // Fetch initial data
-            await fetchGA4Data();
-        } else {
-            dashboardState.apiStatus.googleAnalyticsGA4 = 'error';
-            if (typeof updateConnectionStatus === 'function') {
-                updateConnectionStatus('ga4Status', 'error', result.message || 'Invalid credentials or permissions');
-            }
-        }
-    } catch (error) {
-        dashboardState.apiStatus.googleAnalyticsGA4 = 'error';
-        if (typeof updateConnectionStatus === 'function') {
-            updateConnectionStatus('ga4Status', 'error', 'Connection test failed');
-        }
-        console.error('GA4 connection test failed:', error);
-    }
-    
-    if (typeof saveToLocalStorage === 'function') {
-        saveToLocalStorage();
-    }
+    return testApiConnection({
+        apiKeyElementIds: ['ga4ApiKey'],
+        statusKey: 'ga4Status',
+        apiEndpoint: '/api/test-ga4',
+        dashboardApiKey: 'googleAnalyticsGA4',
+        dashboardStatusKey: 'googleAnalyticsGA4',
+        fetchDataFunction: fetchGA4Data,
+        serviceName: 'GA4',
+        errorMessage: 'Invalid credentials or permissions'
+    });
 }
 
 // Fetch Google Search Console data
@@ -459,6 +397,7 @@ function getAnalyticsStats() {
 }
 
 // Export functions for global access
+window.testApiConnection = testApiConnection;
 window.testGSCConnection = testGSCConnection;
 window.testGAConnection = testGAConnection;
 window.testGA4Connection = testGA4Connection;

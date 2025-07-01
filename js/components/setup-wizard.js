@@ -241,13 +241,21 @@ async function testGSCConnection() {
         // Store API key
         dashboardState.apiKeys.googleSearchConsole = apiKey;
         
-        // Simulate API test (replace with actual GSC API call)
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Test Google Search Console API connection
+        const response = await fetch('/api/test-gsc-connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                api_key: apiKey
+            })
+        });
         
-        // For demo purposes, randomly succeed or fail
-        const success = Math.random() > 0.3;
+        const result = await response.json();
         
-        if (success) {
+        if (response.ok && result.success) {
             dashboardState.apiStatus.googleSearchConsole = 'connected';
             updateConnectionStatus('gscStatus', 'success', 'Connected successfully');
             
@@ -257,9 +265,11 @@ async function testGSCConnection() {
             }
         } else {
             dashboardState.apiStatus.googleSearchConsole = 'error';
-            updateConnectionStatus('gscStatus', 'error', 'Invalid API key or permissions');
+            const errorMessage = result.error || 'Invalid API key or permissions';
+            updateConnectionStatus('gscStatus', 'error', errorMessage);
         }
     } catch (error) {
+        console.error('GSC connection test failed:', error);
         dashboardState.apiStatus.googleSearchConsole = 'error';
         updateConnectionStatus('gscStatus', 'error', 'Connection test failed');
     }
@@ -283,12 +293,21 @@ async function testGAConnection() {
     try {
         dashboardState.apiKeys.googleAnalytics = apiKey;
         
-        // Simulate API test
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Test Google Analytics API connection
+        const response = await fetch('/api/test-ga-connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                api_key: apiKey
+            })
+        });
         
-        const success = Math.random() > 0.3;
+        const result = await response.json();
         
-        if (success) {
+        if (response.ok && result.success) {
             dashboardState.apiStatus.googleAnalytics = 'connected';
             updateConnectionStatus('gaStatus', 'success', 'Connected successfully');
             
@@ -297,9 +316,11 @@ async function testGAConnection() {
             }
         } else {
             dashboardState.apiStatus.googleAnalytics = 'error';
-            updateConnectionStatus('gaStatus', 'error', 'Invalid credentials or permissions');
+            const errorMessage = result.error || 'Invalid credentials or permissions';
+            updateConnectionStatus('gaStatus', 'error', errorMessage);
         }
     } catch (error) {
+        console.error('GA connection test failed:', error);
         dashboardState.apiStatus.googleAnalytics = 'error';
         updateConnectionStatus('gaStatus', 'error', 'Connection test failed');
     }
@@ -323,12 +344,21 @@ async function testGA4Connection() {
     try {
         dashboardState.apiKeys.googleAnalytics = apiKey;
         
-        // Simulate API test
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Test GA4 API connection
+        const response = await fetch('/api/test-ga4-connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                api_key: apiKey
+            })
+        });
         
-        const success = Math.random() > 0.3;
+        const result = await response.json();
         
-        if (success) {
+        if (response.ok && result.success) {
             dashboardState.apiStatus.googleAnalytics = 'connected';
             updateConnectionStatus('ga4Status', 'success', 'Connected successfully');
             
@@ -337,9 +367,11 @@ async function testGA4Connection() {
             }
         } else {
             dashboardState.apiStatus.googleAnalytics = 'error';
-            updateConnectionStatus('ga4Status', 'error', 'Invalid credentials or permissions');
+            const errorMessage = result.error || 'Invalid credentials or permissions';
+            updateConnectionStatus('ga4Status', 'error', errorMessage);
         }
     } catch (error) {
+        console.error('GA4 connection test failed:', error);
         dashboardState.apiStatus.googleAnalytics = 'error';
         updateConnectionStatus('ga4Status', 'error', 'Connection test failed');
     }
@@ -363,12 +395,21 @@ async function testSocialConnection() {
     try {
         dashboardState.apiKeys.scrapeCreators = apiKey;
         
-        // Simulate API test
-        await new Promise(resolve => setTimeout(resolve, 1800));
+        // Test Social Media API connection
+        const response = await fetch('/api/test-social-connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                api_key: apiKey
+            })
+        });
         
-        const success = Math.random() > 0.3;
+        const result = await response.json();
         
-        if (success) {
+        if (response.ok && result.success) {
             dashboardState.apiStatus.scrapeCreators = 'connected';
             updateConnectionStatus('socialStatus', 'success', 'Connected successfully');
             
@@ -377,9 +418,11 @@ async function testSocialConnection() {
             }
         } else {
             dashboardState.apiStatus.scrapeCreators = 'error';
-            updateConnectionStatus('socialStatus', 'error', 'Invalid API key or rate limit exceeded');
+            const errorMessage = result.error || 'Invalid API key or rate limit exceeded';
+            updateConnectionStatus('socialStatus', 'error', errorMessage);
         }
     } catch (error) {
+        console.error('Social connection test failed:', error);
         dashboardState.apiStatus.scrapeCreators = 'error';
         updateConnectionStatus('socialStatus', 'error', 'Connection test failed');
     }
@@ -403,19 +446,30 @@ async function testSCConnection() {
     try {
         dashboardState.apiKeys.scrapeCreators = apiKey;
         
-        // Simulate API test
-        await new Promise(resolve => setTimeout(resolve, 1800));
+        // Test ScrapeCreators API connection
+        const response = await fetch('/api/test-scrape-creators-connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                api_key: apiKey
+            })
+        });
         
-        const success = Math.random() > 0.3;
+        const result = await response.json();
         
-        if (success) {
+        if (response.ok && result.success) {
             dashboardState.apiStatus.scrapeCreators = 'connected';
             updateConnectionStatus('scStatus', 'success', 'Connected successfully');
         } else {
             dashboardState.apiStatus.scrapeCreators = 'error';
-            updateConnectionStatus('scStatus', 'error', 'Invalid API key or rate limit exceeded');
+            const errorMessage = result.error || 'Invalid API key or rate limit exceeded';
+            updateConnectionStatus('scStatus', 'error', errorMessage);
         }
     } catch (error) {
+        console.error('ScrapeCreators connection test failed:', error);
         dashboardState.apiStatus.scrapeCreators = 'error';
         updateConnectionStatus('scStatus', 'error', 'Connection test failed');
     }
@@ -439,19 +493,30 @@ async function testExaConnection() {
     try {
         dashboardState.apiKeys.exaSearch = apiKey;
         
-        // Simulate API test
-        await new Promise(resolve => setTimeout(resolve, 1600));
+        // Test Exa Search API connection
+        const response = await fetch('/api/test-exa-connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                api_key: apiKey
+            })
+        });
         
-        const success = Math.random() > 0.3;
+        const result = await response.json();
         
-        if (success) {
+        if (response.ok && result.success) {
             dashboardState.apiStatus.exaSearch = 'connected';
             updateConnectionStatus('exaStatus', 'success', 'Connected successfully');
         } else {
             dashboardState.apiStatus.exaSearch = 'error';
-            updateConnectionStatus('exaStatus', 'error', 'Invalid API key or service unavailable');
+            const errorMessage = result.error || 'Invalid API key or service unavailable';
+            updateConnectionStatus('exaStatus', 'error', errorMessage);
         }
     } catch (error) {
+        console.error('Exa Search connection test failed:', error);
         dashboardState.apiStatus.exaSearch = 'error';
         updateConnectionStatus('exaStatus', 'error', 'Connection test failed');
     }
@@ -475,19 +540,30 @@ async function testEmailConnection() {
     try {
         dashboardState.apiKeys.emailMarketing = apiKey;
         
-        // Simulate API test
-        await new Promise(resolve => setTimeout(resolve, 1400));
+        // Test Email Marketing API connection
+        const response = await fetch('/api/test-email-connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                api_key: apiKey
+            })
+        });
         
-        const success = Math.random() > 0.3;
+        const result = await response.json();
         
-        if (success) {
+        if (response.ok && result.success) {
             dashboardState.apiStatus.emailMarketing = 'connected';
             updateConnectionStatus('emailStatus', 'success', 'Connected successfully');
         } else {
             dashboardState.apiStatus.emailMarketing = 'error';
-            updateConnectionStatus('emailStatus', 'error', 'Invalid API key or authentication failed');
+            const errorMessage = result.error || 'Invalid API key or authentication failed';
+            updateConnectionStatus('emailStatus', 'error', errorMessage);
         }
     } catch (error) {
+        console.error('Email connection test failed:', error);
         dashboardState.apiStatus.emailMarketing = 'error';
         updateConnectionStatus('emailStatus', 'error', 'Connection test failed');
     }
@@ -511,19 +587,30 @@ async function testCRMConnection() {
     try {
         dashboardState.apiKeys.crmCalendar = apiKey;
         
-        // Simulate API test
-        await new Promise(resolve => setTimeout(resolve, 1700));
+        // Test CRM/Calendar API connection
+        const response = await fetch('/api/test-crm-connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                api_key: apiKey
+            })
+        });
         
-        const success = Math.random() > 0.3;
+        const result = await response.json();
         
-        if (success) {
+        if (response.ok && result.success) {
             dashboardState.apiStatus.crmCalendar = 'connected';
             updateConnectionStatus('crmStatus', 'success', 'Connected successfully');
         } else {
             dashboardState.apiStatus.crmCalendar = 'error';
-            updateConnectionStatus('crmStatus', 'error', 'Invalid API key or permissions');
+            const errorMessage = result.error || 'Invalid API key or permissions';
+            updateConnectionStatus('crmStatus', 'error', errorMessage);
         }
     } catch (error) {
+        console.error('CRM connection test failed:', error);
         dashboardState.apiStatus.crmCalendar = 'error';
         updateConnectionStatus('crmStatus', 'error', 'Connection test failed');
     }

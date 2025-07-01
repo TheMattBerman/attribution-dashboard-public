@@ -3,7 +3,11 @@
 // Save dashboard state to localStorage
 function saveToLocalStorage() {
     try {
-        localStorage.setItem('attributionDashboardState', JSON.stringify(dashboardState));
+        const dataToSave = {
+            ...dashboardState,
+            _lastSaved: new Date().toISOString()
+        };
+        localStorage.setItem('attributionDashboardState', JSON.stringify(dataToSave));
     } catch (error) {
         console.error('Error saving to localStorage:', error);
         if (typeof showNotification === 'function') {
@@ -21,6 +25,11 @@ function loadFromLocalStorage() {
             
             // Merge saved state with default state, handling arrays properly
             Object.keys(savedState).forEach(key => {
+                // Skip metadata fields
+                if (key.startsWith('_')) {
+                    return;
+                }
+                
                 if (dashboardState[key] !== undefined) {
                     // Check if the property should be an array
                     if (Array.isArray(dashboardState[key])) {
@@ -124,6 +133,7 @@ function importToStorage(section, data) {
     try {
         const currentState = exportStoredData() || {};
         currentState[section] = data;
+        currentState._lastSaved = new Date().toISOString();
         localStorage.setItem('attributionDashboardState', JSON.stringify(currentState));
         
         // Update dashboard state if available
@@ -149,11 +159,17 @@ function getStorageInfo() {
         const size = stored ? new Blob([stored]).size : 0;
         const sizeKB = (size / 1024).toFixed(2);
         
+        let lastSaved = null;
+        if (stored) {
+            const data = JSON.parse(stored);
+            lastSaved = data._lastSaved || null;
+        }
+        
         return {
             size: size,
             sizeKB: sizeKB,
             itemCount: stored ? Object.keys(JSON.parse(stored)).length : 0,
-            lastSaved: stored ? new Date().toISOString() : null
+            lastSaved: lastSaved
         };
     } catch (error) {
         console.error('Error getting storage info:', error);
