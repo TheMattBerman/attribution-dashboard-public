@@ -169,6 +169,11 @@ async function fetchSocialData() {
                     dashboardState.liveFeed.mentions = dashboardState.liveFeed.mentions.slice(0, 100);
                 }
                 
+                // Update chart data from new mentions
+                if (typeof updateMentionsChartData === 'function') {
+                    updateMentionsChartData();
+                }
+                
                 // Update feed display if functions are available
                 if (typeof populateLiveFeed === 'function') {
                     populateLiveFeed();
@@ -238,6 +243,11 @@ async function fetchWebMentions() {
                 // Keep only last 100 mentions
                 if (dashboardState.liveFeed.mentions.length > 100) {
                     dashboardState.liveFeed.mentions = dashboardState.liveFeed.mentions.slice(0, 100);
+                }
+                
+                // Update chart data from new mentions
+                if (typeof updateMentionsChartData === 'function') {
+                    updateMentionsChartData();
                 }
                 
                 // Update feed display if functions are available

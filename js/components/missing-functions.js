@@ -236,6 +236,11 @@ async function fetchFreshData() {
             // Sort by timestamp (newest first)
             dashboardState.liveFeed.mentions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
+            // Update chart data from new mentions
+            if (typeof updateMentionsChartData === 'function') {
+                updateMentionsChartData();
+            }
+            
             // Update display
             if (typeof populateLiveFeed === 'function') {
                 populateLiveFeed();
@@ -378,11 +383,21 @@ function loadMoreMentions() {
 
 // Chart Functions  
 function toggleTimeframe(timeframe) {
+    // Update global timeframe variable
+    if (typeof currentTimeframe !== 'undefined') {
+        window.currentTimeframe = timeframe;
+    }
+    
     // Update active state
-    document.querySelectorAll('.timeframe-btn').forEach(btn => {
+    document.querySelectorAll('#toggle7d, #toggle30d').forEach(btn => {
         btn.classList.remove('active');
     });
     document.getElementById(`toggle${timeframe}`).classList.add('active');
+    
+    // Refresh chart data from real mentions
+    if (typeof updateMentionsChartData === 'function') {
+        updateMentionsChartData();
+    }
     
     // Update chart
     if (typeof updateChart === 'function') {

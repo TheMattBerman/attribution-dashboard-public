@@ -261,6 +261,11 @@ function updateInboundMessagesData(data) {
             dashboardState.liveFeed.mentions = dashboardState.liveFeed.mentions.slice(0, 100);
         }
         
+        // Update chart data from new mentions
+        if (typeof updateMentionsChartData === 'function') {
+            updateMentionsChartData();
+        }
+        
         // Update feed display
         if (typeof populateLiveFeed === 'function') {
             populateLiveFeed();

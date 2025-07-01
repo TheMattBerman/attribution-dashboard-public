@@ -96,6 +96,11 @@ function loadDashboardData() {
         populateEchoes();
     }
     
+    // Generate chart data from existing mentions
+    if (typeof updateMentionsChartData === 'function') {
+        updateMentionsChartData();
+    }
+    
     // Initialize chart if not already done
     if (!mentionsChart) {
         initializeChart();
@@ -191,6 +196,12 @@ function updateChart(timeframe) {
 }
 
 function refreshChart() {
+    // First update chart data from current mentions
+    if (typeof updateMentionsChartData === 'function') {
+        updateMentionsChartData();
+    }
+    
+    // Then update the chart display
     if (mentionsChart) {
         updateChartData(currentTimeframe);
     }

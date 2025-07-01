@@ -13,6 +13,40 @@ A comprehensive social media monitoring and attribution tracking dashboard that 
 - **Beautiful Dashboard**: Modern, responsive UI with dark mode and real-time updates
 - **Caching System**: Efficient data caching to minimize API calls
 
+## 🔥 Key Features
+
+### Real-Time Mentions Graph
+
+- **Accurate Data Representation**: The mentions graph now automatically reflects your actual mentions data for both 7-day and 30-day timeframes
+- **Live Updates**: Chart data updates automatically when new mentions are fetched from APIs or imported via CSV
+- **Dynamic Switching**: Toggle between 7-day and 30-day views with accurate counts and daily breakdowns
+- **Real-time Refresh**: Use the refresh button to get the latest data and update the graph immediately
+
+### How the Mentions Graph Works
+
+1. **Data Source**: Pulls from your actual mentions stored in `dashboardState.liveFeed.mentions`
+2. **Time Aggregation**: Groups mentions by day for the selected timeframe (7 or 30 days)
+3. **Auto-Update**: Refreshes automatically when:
+   - New mentions are fetched from social media APIs
+   - Web mentions are retrieved via Exa Search
+   - CSV data is imported
+   - The refresh button is clicked
+   - Timeframe is switched between 7d/30d
+
+### Social Listening & Attribution
+
+- **Multi-Platform Monitoring**: Track mentions across Twitter/X, Reddit, Discord, TikTok, YouTube, and web
+- **Sentiment Analysis**: Advanced sentiment tracking with confidence scores and emotional categories
+- **Attribution Scoring**: Calculate attribution impact based on mentions, engagement, and brand signals
+- **Real-time Feed**: Live stream of brand mentions with filtering and export capabilities
+
+### Analytics & Insights
+
+- **Signal Tracking**: Monitor branded search volume, direct traffic, community engagement
+- **Campaign Attribution**: Track marketing campaign performance and brand mention correlation
+- **Data Export**: Export mentions, charts, and analytics data in CSV/PNG formats
+- **Historical Analysis**: View trends over 7-day and 30-day periods
+
 ## Quick Start
 
 1. **Clone the repository**

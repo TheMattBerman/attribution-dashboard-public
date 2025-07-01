@@ -23,6 +23,9 @@ async function initializeLiveFeed() {
         // Generate initial sample mentions as fallback
         dashboardState.liveFeed.mentions = generateSampleMentions();
         
+        // Update chart data even with sample data
+        updateMentionsChartData();
+        
         // Populate the feed
         populateLiveFeed();
         updateFeedStats();
@@ -307,6 +310,80 @@ function updateLiveFeed() {
     }
 }
 
+// Generate chart data from real mentions
+function generateMentionsDataFromFeed(timeframe = '7d') {
+    const mentions = dashboardState.liveFeed?.mentions || [];
+    const days = timeframe === '7d' ? 7 : 30;
+    const now = new Date();
+    const data = [];
+    
+    console.log(`Generating chart data for most recent ${timeframe} with ${mentions.length} mentions`);
+    
+    // Filter mentions to only include those from the specified timeframe (most recent days)
+    const cutoffDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    const recentMentions = mentions.filter(mention => {
+        if (!mention.timestamp) return false;
+        try {
+            const mentionDate = new Date(mention.timestamp);
+            return mentionDate >= cutoffDate && mentionDate <= now;
+        } catch (e) {
+            console.warn('Invalid timestamp in mention:', mention.timestamp);
+            return false;
+        }
+    });
+    
+    console.log(`Filtered to ${recentMentions.length} mentions from the last ${days} days`);
+    
+    // Create array of dates for the timeframe (most recent first, then reverse for chronological order)
+    for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        const dayLabel = timeframe === '7d' 
+            ? date.toLocaleDateString('en-US', { weekday: 'short' })
+            : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        // Count mentions for this specific day
+        const dayMentions = recentMentions.filter(mention => {
+            const mentionDate = new Date(mention.timestamp);
+            return mentionDate.toDateString() === date.toDateString();
+        });
+        
+        data.push({
+            day: dayLabel,
+            mentions: dayMentions.length,
+            date: date.toLocaleDateString()
+        });
+    }
+    
+    console.log(`Generated chart data for most recent ${timeframe}:`, data);
+    return data;
+}
+
+// Update chart data structure with real mentions data
+function updateMentionsChartData() {
+    if (!dashboardState.mentionsData) {
+        dashboardState.mentionsData = {};
+    }
+    
+    // Generate data for both timeframes from real mentions
+    dashboardState.mentionsData['7d'] = generateMentionsDataFromFeed('7d');
+    dashboardState.mentionsData['30d'] = generateMentionsDataFromFeed('30d');
+    
+    console.log('Updated chart data from real mentions:', {
+        '7d': dashboardState.mentionsData['7d'],
+        '30d': dashboardState.mentionsData['30d']
+    });
+    
+    // Update the chart if it exists
+    if (typeof updateChartData === 'function' && typeof currentTimeframe !== 'undefined') {
+        updateChartData(currentTimeframe);
+    }
+    
+    // Update chart stats
+    if (typeof updateChartStats === 'function' && typeof currentTimeframe !== 'undefined') {
+        updateChartStats(currentTimeframe);
+    }
+}
+
 // Refresh feed with real data
 async function refreshFeed() {
     if (typeof showNotification === 'function') {
@@ -358,6 +435,9 @@ async function refreshFeed() {
             // Sort by timestamp (newest first)
             dashboardState.liveFeed.mentions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             
+            // Update chart data from real mentions
+            updateMentionsChartData();
+            
             // Update display
             populateLiveFeed();
             updateFeedStats();
@@ -388,6 +468,9 @@ async function refreshFeed() {
         if (dashboardState.liveFeed.mentions.length > 100) {
             dashboardState.liveFeed.mentions = dashboardState.liveFeed.mentions.slice(0, 100);
         }
+        
+        // Update chart data even with sample data
+        updateMentionsChartData();
         
         populateLiveFeed();
         updateFeedStats();
@@ -474,34 +557,11 @@ async function refreshFeedWithRealData() {
     try {
         const daysBack = (typeof currentTimeframe !== 'undefined' && currentTimeframe === '7d') ? 7 : 30;
         
-        // First, try to get cached data
-        let response = await fetch(`/api/fetch-mentions?days_back=${daysBack}&platform=all`, {
+        const response = await fetch(`/api/fetch-mentions?days_back=${daysBack}&platform=all`, {
             credentials: 'include'
         });
-        let result = await response.json();
         
-        // If no cached data or force refresh, call refresh endpoint
-        if (result.status === 'success' && result.data.length === 0 && result.source === 'empty') {
-            console.log('No cached data found, fetching fresh data from APIs...');
-            
-            if (typeof showNotification === 'function') {
-                showNotification('Fetching fresh data from social media APIs...', 'info');
-            }
-            
-            // Call refresh endpoint to get fresh data
-            response = await fetch('/api/refresh-mentions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    days_back: daysBack,
-                    platform: 'all'
-                })
-            });
-            result = await response.json();
-        }
+        const result = await response.json();
         
         if (result.status === 'success') {
             const mentions = result.data || [];
@@ -549,6 +609,9 @@ async function refreshFeedWithRealData() {
             
             // Sort by timestamp (newest first)
             dashboardState.liveFeed.mentions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            // Update chart data from real mentions
+            updateMentionsChartData();
             
             // Update display
             populateLiveFeed();
@@ -606,3 +669,5 @@ window.filterFeed = filterFeed;
 window.loadMoreMentions = loadMoreMentions;
 window.exportFeed = exportFeed;
 window.refreshFeedWithRealData = refreshFeedWithRealData;
+window.generateMentionsDataFromFeed = generateMentionsDataFromFeed;
+window.updateMentionsChartData = updateMentionsChartData;
