@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attributionless Impact Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Enhanced Quick Setup Wizard -->
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content setup-wizard">
+            <div class="wizard-header">
+                <h2>🚀 Get Your Attribution Dashboard Ready</h2>
+                <p>Track your marketing impact in under 10 minutes. Choose your setup method:</p>
+                <button class="modal-close" onclick="closeWelcome()" aria-label="Close">&times;</button>
+            </div>
+            
+            <div class="setup-options">
+                <div class="setup-option" onclick="selectSetupMethod('api')">
+                    <div class="option-icon">🔗</div>
+                    <h3>Connect APIs</h3>
+                    <p>Link your Google Search Console, Analytics, and social accounts for automatic data collection</p>
+                    <div class="option-badge">Recommended</div>
+                </div>
+                
+                <div class="setup-option" onclick="selectSetupMethod('csv')">
+                    <div class="option-icon">📊</div>
+                    <h3>Upload CSV Data</h3>
+                    <p>Import your existing data using our pre-built templates</p>
+                    <div class="option-badge">Quick Start</div>
+                </div>
+                
+                <div class="setup-option" onclick="selectSetupMethod('env')">
+                    <div class="option-icon">⚙️</div>
+                    <h3>Environment Variables</h3>
+                    <p>Configure API keys via .env file for persistent setup</p>
+                    <div class="option-badge">Advanced</div>
+                </div>
+                
+                <div class="setup-option" onclick="selectSetupMethod('both')">
+                    <div class="option-icon">⚡</div>
+                    <h3>Both Methods</h3>
+                    <p>Connect APIs for ongoing tracking + upload historical data</p>
+                    <div class="option-badge">Most Complete</div>
+                </div>
+            </div>
+
+            <!-- API Setup Step -->
+            <div id="apiSetupStep" class="wizard-step" style="display: none;">
+                <div class="step-header">
+                    <h3>🔗 Connect Your Data Sources</h3>
+                    <p>Add your API keys to start tracking automatically</p>
+                </div>
+                
+                <div class="api-setup-grid">
+                    <div class="api-setup-card priority">
+                        <div class="api-icon">🔍</div>
+                        <h4>Google Search Console</h4>
+                        <p>Track branded search volume & impressions</p>
+                        <input type="text" class="form-control" id="gscApiKey" placeholder="Enter GSC API key">
+                        <button class="btn btn--outline btn--sm" onclick="testGSCConnection()">Test</button>
+                        <div class="connection-status" id="gscStatus"></div>
+                        <small>Required for: Branded Search Volume tracking</small>
+                    </div>
+                    
+                    <div class="api-setup-card priority">
+                        <div class="api-icon">📈</div>
+                        <h4>Google Analytics</h4>
+                        <p>Monitor direct traffic & bookmark visits</p>
+                        <input type="text" class="form-control" id="gaApiKey" placeholder="Enter GA API key">
+                        <button class="btn btn--outline btn--sm" onclick="testGAConnection()">Test</button>
+                        <div class="connection-status" id="gaStatus"></div>
+                        <small>Required for: Direct Type-ins/Bookmarks tracking</small>
+                    </div>
+                    
+                    <div class="api-setup-card">
+                        <div class="api-icon">🐦</div>
+                        <h4>ScrapeCreators</h4>
+                        <p>Social media mention & engagement tracking</p>
+                        <input type="text" class="form-control" id="scApiKey" placeholder="Enter ScrapeCreators API key">
+                        <button class="btn btn--outline btn--sm" onclick="testSCConnection()">Test</button>
+                        <div class="connection-status" id="scStatus"></div>
+                        <small>Required for: Community Engagement tracking</small>
+                    </div>
+                    
+                    <div class="api-setup-card">
+                        <div class="api-icon">🔎</div>
+                        <h4>Exa Search</h4>
+                        <p>Web-wide mention & content reference monitoring</p>
+                        <input type="text" class="form-control" id="exaApiKey" placeholder="Enter Exa API key">
+                        <button class="btn btn--outline btn--sm" onclick="testExaConnection()">Test</button>
+                        <div class="connection-status" id="exaStatus"></div>
+                        <small>Required for: Inbound Messages tracking</small>
+                    </div>
+                    
+                    <div class="api-setup-card">
+                        <div class="api-icon">📧</div>
+                        <h4>Email Marketing API</h4>
+                        <p>Track email opt-ins & campaign attribution</p>
+                        <input type="text" class="form-control" id="emailApiKey" placeholder="Enter Email API key (Mailchimp, ConvertKit, etc.)">
+                        <button class="btn btn--outline btn--sm" onclick="testEmailConnection()">Test</button>
+                        <div class="connection-status" id="emailStatus"></div>
+                        <small>Required for: First-Party Data tracking</small>
+                    </div>
+                    
+                    <div class="api-setup-card">
+                        <div class="api-icon">📅</div>
+                        <h4>Calendar/CRM API</h4>
+                        <p>Track bookings, trials & conversions</p>
+                        <input type="text" class="form-control" id="crmApiKey" placeholder="Enter CRM/Calendar API key">
+                        <button class="btn btn--outline btn--sm" onclick="testCRMConnection()">Test</button>
+                        <div class="connection-status" id="crmStatus"></div>
+                        <small>Required for: First-Party Data tracking</small>
+                    </div>
+                </div>
+                
+                <div class="wizard-actions">
+                    <button class="btn btn--secondary" onclick="skipAPISetup()">Skip for Now</button>
+                    <button class="btn btn--primary" onclick="nextWizardStep()">Continue</button>
+                </div>
+            </div>
+
+            <!-- CSV Upload Step -->
+            <div id="csvSetupStep" class="wizard-step" style="display: none;">
+                <div class="step-header">
+                    <h3>📊 Upload Your Data</h3>
+                    <p>Import existing data using our templates</p>
+                </div>
+                
+                <div class="csv-templates">
+                    <div class="template-grid">
+                        <div class="template-card">
+                            <h4>🔍 Branded Search Volume</h4>
+                            <p>Upload search console data: date, query, impressions, clicks, avg_position</p>
+                            <button class="btn btn--outline btn--sm" onclick="downloadTemplate('search-volume')">Download Template</button>
+                            <input type="file" id="searchVolumeCSV" accept=".csv" onchange="handleTemplateUpload('search-volume', this)">
+                            <button class="btn btn--secondary btn--sm" onclick="document.getElementById('searchVolumeCSV').click()">Upload CSV</button>
+                            <div class="upload-status" id="searchVolumeStatus"></div>
+                        </div>
+                        
+                        <div class="template-card">
+                            <h4>📈 Direct Type-ins/Bookmarks</h4>
+                            <p>Upload GA direct traffic: date, sessions, source_medium, landing_page</p>
+                            <button class="btn btn--outline btn--sm" onclick="downloadTemplate('direct-traffic')">Download Template</button>
+                            <input type="file" id="directTrafficCSV" accept=".csv" onchange="handleTemplateUpload('direct-traffic', this)">
+                            <button class="btn btn--secondary btn--sm" onclick="document.getElementById('directTrafficCSV').click()">Upload CSV</button>
+                            <div class="upload-status" id="directTrafficStatus"></div>
+                        </div>
+                        
+                        <div class="template-card">
+                            <h4>💬 Inbound Messages</h4>
+                            <p>Upload messages referencing content: date, source, message_type, content_ref</p>
+                            <button class="btn btn--outline btn--sm" onclick="downloadTemplate('inbound-messages')">Download Template</button>
+                            <input type="file" id="inboundMessagesCSV" accept=".csv" onchange="handleTemplateUpload('inbound-messages', this)">
+                            <button class="btn btn--secondary btn--sm" onclick="document.getElementById('inboundMessagesCSV').click()">Upload CSV</button>
+                            <div class="upload-status" id="inboundMessagesStatus"></div>
+                        </div>
+                        
+                        <div class="template-card">
+                            <h4>👥 Community Engagement</h4>
+                            <p>Upload forum/social activity: date, platform, engagement_type, metrics</p>
+                            <button class="btn btn--outline btn--sm" onclick="downloadTemplate('community-engagement')">Download Template</button>
+                            <input type="file" id="communityEngagementCSV" accept=".csv" onchange="handleTemplateUpload('community-engagement', this)">
+                            <button class="btn btn--secondary btn--sm" onclick="document.getElementById('communityEngagementCSV').click()">Upload CSV</button>
+                            <div class="upload-status" id="communityEngagementStatus"></div>
+                        </div>
+                        
+                        <div class="template-card">
+                            <h4>📧 First-Party Data</h4>
+                            <p>Upload conversions: date, source, conversion_type, attribution_source</p>
+                            <button class="btn btn--outline btn--sm" onclick="downloadTemplate('first-party')">Download Template</button>
+                            <input type="file" id="firstPartyCSV" accept=".csv" onchange="handleTemplateUpload('first-party', this)">
+                            <button class="btn btn--secondary btn--sm" onclick="document.getElementById('firstPartyCSV').click()">Upload CSV</button>
+                            <div class="upload-status" id="firstPartyStatus"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="wizard-actions">
+                    <button class="btn btn--secondary" onclick="previousWizardStep()">Back</button>
+                    <button class="btn btn--primary" onclick="nextWizardStep()">Continue</button>
+                </div>
+            </div>
+
+            <!-- Environment Variables Setup Step -->
+            <div id="envSetupStep" class="wizard-step" style="display: none;">
+                <div class="step-header">
+                    <h3>⚙️ Environment Variables Setup</h3>
+                    <p>Configure your API keys via .env file for persistent, secure storage</p>
+                </div>
+                
+                <div class="env-setup-content">
+                    <div class="env-instructions">
+                        <h4>📋 Step-by-Step Instructions</h4>
+                        <ol>
+                            <li><strong>Create .env file:</strong> Copy <code>config.env.example</code> to <code>.env</code> in your project root</li>
+                            <li><strong>Add your API keys:</strong> Edit the .env file with your actual API keys</li>
+                            <li><strong>Restart the server:</strong> Stop and restart the backend server to load new keys</li>
+                            <li><strong>Verify connection:</strong> API keys will be loaded automatically on startup</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="env-template">
+                        <h4>📄 .env File Template</h4>
+                        <div class="code-block">
+                            <pre><code># Attribution Dashboard Configuration
+# Copy this file to .env and add your actual API keys
+
+# Brand Configuration
+BRAND_NAME=YourBrandName
+SECRET_KEY=your-secret-key-change-this-in-production
+
+# API Keys for Social Media Monitoring
+SCRAPE_CREATORS_API_KEY=your_scrape_creators_api_key_here
+EXA_API_KEY=your_exa_search_api_key_here
+
+# Optional: Google APIs (if you have them)
+GOOGLE_SEARCH_CONSOLE_API_KEY=your_gsc_api_key_here
+GOOGLE_ANALYTICS_API_KEY=your_ga_api_key_here
+
+# Optional: Email Marketing APIs
+MAILCHIMP_API_KEY=your_mailchimp_api_key_here
+CONVERTKIT_API_KEY=your_convertkit_api_key_here
+
+# Optional: CRM/Calendar APIs
+CALENDLY_API_KEY=your_calendly_api_key_here
+HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
+                        </div>
+                        <button class="btn btn--outline btn--sm" onclick="copyEnvTemplate()">Copy Template</button>
+                    </div>
+                    
+                    <div class="env-benefits">
+                        <h4>✅ Benefits of .env Setup</h4>
+                        <ul>
+                            <li><strong>Persistent:</strong> API keys survive server restarts</li>
+                            <li><strong>Secure:</strong> Keys are stored locally, not in browser</li>
+                            <li><strong>Team-friendly:</strong> Easy to share configuration (without exposing keys)</li>
+                            <li><strong>Production-ready:</strong> Standard practice for deployment</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="env-status">
+                        <h4>🔍 Current Status</h4>
+                        <div id="envStatusDisplay">
+                            <div class="status-item">
+                                <span class="status-label">Brand Name:</span>
+                                <span class="status-value" id="envBrandName">Loading...</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">ScrapeCreators API:</span>
+                                <span class="status-value" id="envScrapeCreators">Loading...</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Exa Search API:</span>
+                                <span class="status-value" id="envExaSearch">Loading...</span>
+                            </div>
+                        </div>
+                        <button class="btn btn--secondary btn--sm" onclick="checkEnvStatus()">Refresh Status</button>
+                    </div>
+                </div>
+                
+                <div class="wizard-actions">
+                    <button class="btn btn--secondary" onclick="previousWizardStep()">Back</button>
+                    <button class="btn btn--primary" onclick="nextWizardStep()">Continue</button>
+                </div>
+            </div>
+
+            <!-- Brand Configuration Step -->
+            <div id="brandSetupStep" class="wizard-step" style="display: none;">
+                <div class="step-header">
+                    <h3>🏷️ Configure Your Brand</h3>
+                    <p>Set up your brand details for accurate tracking</p>
+                </div>
+                
+                <div class="brand-config">
+                    <div class="form-group">
+                        <label class="form-label">Brand Name</label>
+                        <input type="text" class="form-control" id="brandName" placeholder="Enter your brand name">
+                        <small>This will be used for mention tracking and search volume analysis</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Website URL</label>
+                        <input type="url" class="form-control" id="websiteUrl" placeholder="https://yourdomain.com">
+                        <small>Used for direct traffic analysis and mention context</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Alternative Names/Keywords</label>
+                        <input type="text" class="form-control" id="brandKeywords" placeholder="alternative names, abbreviations, etc.">
+                        <small>Comma-separated list of variations to track</small>
+                    </div>
+                </div>
+                
+                <div class="wizard-actions">
+                    <button class="btn btn--secondary" onclick="previousWizardStep()">Back</button>
+                    <button class="btn btn--primary" onclick="finishSetup()">Complete Setup</button>
+                </div>
+            </div>
+
+            <!-- Initial Setup Selection -->
+            <div id="initialSetup" class="wizard-step">
+                <div class="wizard-actions">
+                    <button class="btn btn--outline" onclick="closeWelcome()">Skip Setup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Custom Prompt Modal -->
+    <div id="addPromptModal" class="modal">
+        <div class="modal-content">
+            <h3 id="promptModalTitle">Add Custom Prompt</h3>
+            <form id="promptForm">
+                <input type="hidden" id="promptEditIndex" value="">
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-control" id="promptCategory">
+                        <option value="Survey Questions">Survey Questions</option>
+                        <option value="Email Signatures">Email Signatures</option>
+                        <option value="Follow-up Messages">Follow-up Messages</option>
+                        <option value="Social Media Posts">Social Media Posts</option>
+                        <option value="Landing Pages">Landing Pages</option>
+                        <option value="Feedback Forms">Feedback Forms</option>
+                        <option value="Custom">Custom Category</option>
+                    </select>
+                </div>
+                <div class="form-group" id="customCategoryGroup" style="display: none;">
+                    <label class="form-label">Custom Category Name</label>
+                    <input type="text" class="form-control" id="customCategoryName" placeholder="Enter custom category name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Prompt Title</label>
+                    <input type="text" class="form-control" id="promptTitle" placeholder="Enter a descriptive title for this prompt" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Prompt Content</label>
+                    <textarea class="form-control" id="promptContent" rows="4" placeholder="Enter the full prompt text that you'll use to track attribution..." required></textarea>
+                    <small>Tip: Use placeholders like {brand_name} or {product_name} for reusable prompts</small>
+                </div>
+                <div class="form-group flex gap-8">
+                    <button type="button" class="btn btn--outline" onclick="closeModal('addPromptModal')">Cancel</button>
+                    <button type="submit" class="btn btn--primary" id="promptSubmitBtn">Add Prompt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h3>Impact Dashboard</h3>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#" class="nav-link active" data-section="signalsSection">Signals Tracking</a></li>
+                <li><a href="#" class="nav-link" data-section="liveFeedSection">Live Mentions Feed</a></li>
+                <li><a href="#" class="nav-link" data-section="mentions">Mentions Graph</a></li>
+                <li><a href="#" class="nav-link" data-section="echoes">Echoes Log</a></li>
+                <li><a href="#" class="nav-link" data-section="campaigns">Campaign Scorecard</a></li>
+                <li><a href="#" class="nav-link" data-section="integrations">API Integrations</a></li>
+                <li><a href="#" class="nav-link" data-section="social">Social Monitoring</a></li>
+                <li><a href="#" class="nav-link" data-section="prompts">Prompts & Worksheets</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Signals Tracking Panel -->
+            <section id="signalsSection" class="dashboard-section active">
+                <div class="section-header">
+                    <h2>Attribution Signals Tracking</h2>
+                    <div class="section-actions">
+                        <button class="btn btn--secondary" onclick="refreshData()">Refresh All Data</button>
+                        <button class="btn btn--outline" onclick="exportData('signals')">Export CSV</button>
+                    </div>
+                </div>
+
+                <div class="signals-grid">
+                    <!-- Branded Search Volume Widget -->
+                    <div class="signal-widget api-tracked priority" id="brandedSearchWidget">
+                        <div class="widget-header">
+                            <h4>🔍 Branded Search Volume</h4>
+                            <div class="widget-meta">
+                                <div class="data-source" id="brandedSearchSource">Estimated from mentions</div>
+                                <div class="timeframe-indicator" id="brandedSearchTimeframe">(7 Days)</div>
+                            </div>
+                        </div>
+                        <div class="widget-value">
+                            <span class="value" id="brandedSearchValue">---</span>
+                            <span class="trend neutral" id="brandedSearchTrend">--</span>
+                        </div>
+                        <div class="widget-details">
+                            <small id="brandedSearchDetails">Loading...</small>
+                            <div class="signal-actions" id="brandedSearchActions" style="display: none;">
+                                <button class="btn btn--outline btn--sm" onclick="updateSignal('brandedSearch', prompt('Enter new value:'))">Update Manually</button>
+                                <button class="btn btn--primary btn--sm" onclick="connectGoogleSearchConsole()">Connect GSC</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Direct Type-ins/Bookmarks Widget -->
+                    <div class="signal-widget api-tracked priority" id="directTrafficWidget">
+                        <div class="widget-header">
+                            <h4>📈 Direct Type-ins/Bookmarks</h4>
+                            <div class="widget-meta">
+                                <div class="data-source" id="directTrafficSource">Estimated from mentions</div>
+                                <div class="timeframe-indicator" id="directTrafficTimeframe">(7 Days)</div>
+                            </div>
+                        </div>
+                        <div class="widget-value">
+                            <span class="value" id="directTrafficValue">---</span>
+                            <span class="trend neutral" id="directTrafficTrend">--</span>
+                        </div>
+                        <div class="widget-details">
+                            <small id="directTrafficDetails">Loading...</small>
+                            <div class="signal-actions" id="directTrafficActions" style="display: none;">
+                                <button class="btn btn--outline btn--sm" onclick="updateSignal('directTraffic', prompt('Enter new value:'))">Update Manually</button>
+                                <button class="btn btn--primary btn--sm" onclick="connectGA4()">Connect GA4</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inbound Messages Widget -->
+                    <div class="signal-widget manual-logged" id="inboundMessagesWidget">
+                        <div class="widget-header">
+                            <h4>💬 Inbound Messages</h4>
+                            <div class="widget-meta">
+                                <div class="data-source" id="inboundMessagesSource">Manual + API</div>
+                                <div class="timeframe-indicator" id="inboundMessagesTimeframe">(7 Days)</div>
+                            </div>
+                        </div>
+                        <div class="widget-value">
+                            <span class="value" id="inboundMessagesValue">---</span>
+                            <span class="trend neutral" id="inboundMessagesTrend">--</span>
+                        </div>
+                        <div class="widget-details">
+                            <small id="inboundMessagesDetails">Loading...</small>
+                            <div class="signal-actions" id="inboundMessagesActions" style="display: none;">
+                                <button class="btn btn--outline btn--sm" onclick="updateSignal('inboundMessages', prompt('Enter new value:'))">Update Manually</button>
+                                <button class="btn btn--primary btn--sm" onclick="connectEmailAPI()">Connect Email API</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Community Engagement Widget -->
+                    <div class="signal-widget api-tracked" id="communityEngagementWidget">
+                        <div class="widget-header">
+                            <h4>👥 Community Engagement</h4>
+                            <div class="widget-meta">
+                                <div class="data-source" id="communityEngagementSource">Social APIs</div>
+                                <div class="timeframe-indicator" id="communityEngagementTimeframe">(7 Days)</div>
+                            </div>
+                        </div>
+                        <div class="widget-value">
+                            <span class="value" id="communityEngagementValue">---</span>
+                            <span class="trend neutral" id="communityEngagementTrend">--</span>
+                        </div>
+                        <div class="widget-details">
+                            <small id="communityEngagementDetails">Loading...</small>
+                            <div class="signal-actions" id="communityEngagementActions" style="display: none;">
+                                <button class="btn btn--outline btn--sm" onclick="updateSignal('communityEngagement', prompt('Enter new value:'))">Update Manually</button>
+                                <button class="btn btn--primary btn--sm" onclick="refreshSignalData()">Refresh from Cache</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- First-Party Data Widget -->
+                    <div class="signal-widget api-tracked" id="firstPartyDataWidget">
+                        <div class="widget-header">
+                            <h4>📧 First-Party Data</h4>
+                            <div class="widget-meta">
+                                <div class="data-source" id="firstPartyDataSource">Multiple APIs</div>
+                                <div class="timeframe-indicator" id="firstPartyDataTimeframe">(7 Days)</div>
+                            </div>
+                        </div>
+                        <div class="widget-value">
+                            <span class="value" id="firstPartyDataValue">---</span>
+                            <span class="trend neutral" id="firstPartyDataTrend">--</span>
+                        </div>
+                        <div class="widget-details">
+                            <small id="firstPartyDataDetails">Loading...</small>
+                            <div class="signal-actions" id="firstPartyDataActions" style="display: none;">
+                                <button class="btn btn--outline btn--sm" onclick="updateSignal('firstPartyData', prompt('Enter new value:'))">Update Manually</button>
+                                <button class="btn btn--primary btn--sm" onclick="connectCRM()">Connect CRM/Email</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attribution Score Widget -->
+                    <div class="signal-widget attribution-score" id="attributionScoreWidget">
+                        <div class="widget-header">
+                            <h4>⚡ Total Attribution Score</h4>
+                            <div class="widget-meta">
+                                <div class="data-source" id="attributionScoreSource">Calculated</div>
+                                <div class="timeframe-indicator" id="attributionScoreTimeframe">(7 Days)</div>
+                            </div>
+                        </div>
+                        <div class="widget-value">
+                            <span class="value" id="attributionScoreValue">---</span>
+                            <span class="trend neutral" id="attributionScoreTrend">--</span>
+                        </div>
+                        <div class="widget-details">
+                            <small id="attributionScoreDetails">Loading...</small>
+                            <div class="signal-actions" id="attributionScoreActions" style="display: none;">
+                                <button class="btn btn--outline btn--sm" onclick="calculateAttributionScore()">Recalculate</button>
+                                <button class="btn btn--primary btn--sm" onclick="refreshSignalData()">Refresh Data</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Real-Time Mentions Graph -->
+            <section id="mentions" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Real-Time Mentions Graph</h2>
+                    <div class="section-actions">
+                        <div class="toggle-group">
+                            <button class="btn btn--secondary btn--sm active" id="toggle7d" onclick="toggleTimeframe('7d')">7 Days</button>
+                            <button class="btn btn--secondary btn--sm" id="toggle30d" onclick="toggleTimeframe('30d')">30 Days</button>
+                        </div>
+                        <div class="action-group">
+                            <button class="btn btn--primary btn--sm" onclick="refreshChart()" title="Refresh with latest data">🔄 Refresh</button>
+                            <button class="btn btn--outline btn--sm" onclick="exportChart()">Export Chart</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-loading" id="chartLoading" style="display: none;">
+                        <div class="loading-spinner"></div>
+                        <p>Loading mentions data...</p>
+                    </div>
+                    <canvas id="mentionsChart" width="800" height="400"></canvas>
+                </div>
+
+                <div class="chart-stats">
+                    <div class="stat">
+                        <span class="stat-label">Total Mentions <span id="timeframePeriod">(7 Days)</span></span>
+                        <span class="stat-value" id="totalMentions">481</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Avg Daily</span>
+                        <span class="stat-value" id="avgDaily">69</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Peak Day</span>
+                        <span class="stat-value" id="peakDay">93</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Echoes Log -->
+            <section id="echoes" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Echoes Log</h2>
+                    <div class="section-actions">
+                        <button class="btn btn--primary btn--sm" onclick="addEchoEntry()">Add Entry</button>
+                        <button class="btn btn--outline btn--sm" onclick="exportData('echoes')">Export Log</button>
+                    </div>
+                </div>
+
+                <div class="echoes-controls">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="echoSearch" placeholder="Search echoes..." onkeyup="filterEchoes()">
+                    </div>
+                    <div class="form-group">
+                        <select class="form-control" id="echoFilter" onchange="filterEchoes()">
+                            <option value="">All Types</option>
+                            <option value="Unsolicited Mention">Unsolicited Mention</option>
+                            <option value="Campaign Response">Campaign Response</option>
+                            <option value="New Activity">New Activity</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="echoes-list" id="echosList">
+                    <!-- Echo entries will be populated by JavaScript -->
+                </div>
+
+                <!-- Add Echo Modal -->
+                <div id="addEchoModal" class="modal">
+                    <div class="modal-content">
+                        <h3>Add Echo Entry</h3>
+                        <form id="echoForm">
+                            <div class="form-group">
+                                <label class="form-label">Type</label>
+                                <select class="form-control" id="echoType">
+                                    <option value="Unsolicited Mention">Unsolicited Mention</option>
+                                    <option value="Campaign Response">Campaign Response</option>
+                                    <option value="New Activity">New Activity</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Content</label>
+                                <textarea class="form-control" id="echoContent" rows="3" placeholder="Describe the echo..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Source</label>
+                                <input type="text" class="form-control" id="echoSource" placeholder="e.g., Twitter, Slack, Email">
+                            </div>
+                            <div class="form-group flex gap-8">
+                                <button type="button" class="btn btn--outline" onclick="closeModal('addEchoModal')">Cancel</button>
+                                <button type="submit" class="btn btn--primary">Add Echo</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Live Mentions Feed -->
+            <section id="liveFeedSection" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Live Mentions Feed</h2>
+                    <div class="section-actions">
+                        <button class="btn btn--secondary" onclick="refreshFeed()">Refresh Feed</button>
+                <button class="btn btn--primary" onclick="fetchFreshData()">Fetch Fresh Data</button>
+                <button class="btn btn--tertiary" onclick="checkCacheStatus()">Cache Status</button>
+                        <button class="btn btn--outline" onclick="exportFeed()">Export Mentions</button>
+                    </div>
+                </div>
+
+                <!-- Feed Controls -->
+                <div class="feed-controls">
+                    <div class="feed-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalMentions">247</div>
+                            <div class="stat-label">Total Mentions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number positive" id="positiveMentions">156</div>
+                            <div class="stat-label">Positive</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number neutral" id="neutralMentions">67</div>
+                            <div class="stat-label">Neutral</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number negative" id="negativeMentions">24</div>
+                            <div class="stat-label">Negative</div>
+                        </div>
+                    </div>
+
+                    <div class="feed-filters">
+                        <div class="filter-group">
+                            <select id="platformFilter" class="form-control" onchange="filterFeed()">
+                                <option value="">All Platforms</option>
+                                <option value="twitter">Twitter</option>
+                                <option value="reddit">Reddit</option>
+                                <option value="discord">Discord</option>
+                                <option value="linkedin">LinkedIn</option>
+                                <option value="web">Web</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <select id="sentimentFilter" class="form-control" onchange="filterFeed()">
+                                <option value="">All Sentiments</option>
+                                <option value="positive">Positive</option>
+                                <option value="neutral">Neutral</option>
+                                <option value="negative">Negative</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <input type="text" id="keywordFilter" class="form-control" placeholder="Filter by keyword..." onchange="filterFeed()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Feed -->
+                <div class="mentions-feed" id="mentionsFeed">
+                    <!-- Mentions will be populated by JavaScript -->
+                </div>
+
+                <!-- Feed Footer -->
+                <div class="feed-footer">
+                    <div class="feed-status">
+                        <span class="status-indicator active" id="feedStatus"></span>
+                        <span>Live feed active - Last update: <span id="lastUpdate">Just now</span></span>
+                    </div>
+                    <div class="feed-actions">
+                        <button class="btn btn--outline btn--sm" onclick="toggleFeed()">Pause Feed</button>
+                        <button class="btn btn--secondary btn--sm" onclick="loadMoreMentions()">Load More</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sentiment Analysis Testing -->
+            <section id="sentimentTesting" class="dashboard-section">
+                <div class="section-header">
+                    <h2>🤖 AI Sentiment Analysis</h2>
+                    <div class="section-actions">
+                        <button class="btn btn--outline btn--sm" onclick="checkSentimentConfig()">Check Configuration</button>
+                    </div>
+                </div>
+
+                <div class="sentiment-testing-container">
+                    <div class="sentiment-config-status" id="sentimentConfigStatus">
+                        <div class="status-indicator loading"></div>
+                        <span>Checking sentiment analysis configuration...</span>
+                    </div>
+
+                    <div class="sentiment-test-card">
+                        <h4>Test Sentiment Analysis</h4>
+                        <p>Test the AI-powered sentiment analysis on custom text to see confidence scores and reasoning.</p>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Platform Context</label>
+                            <select class="form-control" id="sentimentPlatform">
+                                <option value="web">Web Content</option>
+                                <option value="twitter">Twitter</option>
+                                <option value="reddit">Reddit</option>
+                                <option value="discord">Discord</option>
+                                <option value="linkedin">LinkedIn</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Text to Analyze</label>
+                            <textarea class="form-control" id="sentimentTestText" rows="4" 
+                                placeholder="Enter some text mentioning your brand to test sentiment analysis..."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button class="btn btn--primary" onclick="testSentimentAnalysis()">Analyze Sentiment</button>
+                            <button class="btn btn--outline" onclick="clearSentimentTest()">Clear</button>
+                        </div>
+                        
+                        <div class="sentiment-results" id="sentimentResults" style="display: none;">
+                            <h5>Analysis Results</h5>
+                            <div class="sentiment-result-grid">
+                                <div class="result-card">
+                                    <div class="result-label">Sentiment</div>
+                                    <div class="result-value" id="resultSentiment">-</div>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-label">Confidence</div>
+                                    <div class="result-value" id="resultConfidence">-</div>
+                                </div>
+                                <div class="result-card">
+                                    <div class="result-label">Method</div>
+                                    <div class="result-value" id="resultMethod">-</div>
+                                </div>
+                            </div>
+                            <div class="result-details">
+                                <div class="result-field">
+                                    <strong>Reasoning:</strong>
+                                    <span id="resultReasoning">-</span>
+                                </div>
+                                <div class="result-field" id="resultEmotionsContainer" style="display: none;">
+                                    <strong>Emotional Categories:</strong>
+                                    <span id="resultEmotions">-</span>
+                                </div>
+                                <div class="result-field" id="resultContextContainer" style="display: none;">
+                                    <strong>Context Awareness:</strong>
+                                    <span id="resultContext">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Campaign Scorecard -->
+            <section id="campaigns" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Campaign Scorecard</h2>
+                    <div class="section-actions">
+                        <button class="btn btn--primary btn--sm" onclick="addCampaign()">Add Campaign</button>
+                        <button class="btn btn--outline btn--sm" onclick="exportData('campaigns')">Export Scorecard</button>
+                    </div>
+                </div>
+
+                <div class="scorecard-table">
+                    <table class="campaign-table" id="campaignTable">
+                        <thead>
+                            <tr>
+                                <th>Campaign Name</th>
+                                <th>Search Delta</th>
+                                <th>Mentions</th>
+                                <th>Sign-ups</th>
+                                <th>Community Buzz</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="campaignTableBody">
+                            <!-- Campaign rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- API/Data Integrations -->
+            <section id="integrations" class="dashboard-section">
+                <div class="section-header">
+                    <h2>API & Data Integrations</h2>
+                    <div class="section-actions">
+                        <button class="btn btn--primary btn--sm" onclick="testConnections()">Test All</button>
+                    </div>
+                </div>
+
+                <div class="integrations-grid">
+                    <div class="integration-card">
+                        <h4>Google Search Console</h4>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="password" class="form-control" id="gscApiKey" placeholder="Enter your GSC API key">
+                        </div>
+                        <div class="integration-status">
+                            <span class="status status--warning" id="gscStatus">Not Connected</span>
+                            <button class="btn btn--outline btn--sm" onclick="testGSCConnection()">Test Connection</button>
+                        </div>
+                    </div>
+
+                    <div class="integration-card">
+                        <h4>CSV/Google Sheets</h4>
+                        <div class="upload-zone" onclick="document.getElementById('sheetsUpload').click()">
+                            <input type="file" id="sheetsUpload" accept=".csv,.xlsx" style="display: none;" onchange="handleSheetsUpload(this)">
+                            <p>Drop CSV files here or click to upload</p>
+                        </div>
+                        <div class="integration-status">
+                            <span class="status status--info" id="sheetsStatus">Ready for Upload</span>
+                        </div>
+                    </div>
+
+                    <div class="integration-card">
+                        <h4>Webhook Configuration</h4>
+                        <div class="form-group">
+                            <label class="form-label">Endpoint URL</label>
+                            <input type="url" class="form-control" id="webhookUrl" placeholder="https://your-webhook-endpoint.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Authentication</label>
+                            <input type="password" class="form-control" id="webhookAuth" placeholder="Bearer token or API key">
+                        </div>
+                        <div class="integration-status">
+                            <span class="status status--warning" id="webhookStatus">Not Configured</span>
+                            <button class="btn btn--outline btn--sm" onclick="testWebhook()">Test Webhook</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Social Monitoring Files -->
+            <section id="social" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Social Monitoring Integrations</h2>
+                </div>
+
+                <div class="monitoring-grid">
+                    <div class="monitoring-card">
+                        <h4>ScrapeCreators Integration</h4>
+                        <p>Automatically pull brand mentions from X, Discord, Reddit, and more.</p>
+                        <div class="monitoring-status">
+                            <span class="status status--info" id="scrapeStatus">Ready to Configure</span>
+                        </div>
+                        <div class="monitoring-actions">
+                            <button class="btn btn--primary btn--sm" onclick="downloadScript('scrape')">Download Script</button>
+                            <button class="btn btn--outline btn--sm" onclick="showInstructions('scrape')">View Instructions</button>
+                        </div>
+                    </div>
+
+                    <div class="monitoring-card">
+                        <h4>Exa Search API</h4>
+                        <p>Fetch and record recent brand mentions from the open web via API.</p>
+                        <div class="monitoring-status">
+                            <span class="status status--info" id="exaStatus">Ready to Configure</span>
+                        </div>
+                        <div class="monitoring-actions">
+                            <button class="btn btn--primary btn--sm" onclick="downloadScript('exa')">Download Script</button>
+                            <button class="btn btn--outline btn--sm" onclick="showInstructions('exa')">View Instructions</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="configuration-help">
+                    <h4>Setup Instructions</h4>
+                    <div class="help-content" id="instructionsContent">
+                        <p>Select a monitoring tool above to view setup instructions.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Worksheets & Prompts -->
+            <section id="prompts" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Worksheets & Prompts Library</h2>
+                    <div class="section-actions">
+                        <button class="btn btn--primary btn--sm" onclick="addCustomPrompt()">Add Custom Prompt</button>
+                        <button class="btn btn--outline btn--sm" onclick="downloadWorksheet()">Download Worksheet</button>
+                    </div>
+                </div>
+
+                <div class="prompts-grid">
+                    <div class="prompt-categories">
+                        <button class="category-btn active" data-category="all" onclick="filterPrompts('all')">All Prompts</button>
+                        <button class="category-btn" data-category="Survey Questions" onclick="filterPrompts('Survey Questions')">Survey Questions</button>
+                        <button class="category-btn" data-category="Email Signatures" onclick="filterPrompts('Email Signatures')">Email Signatures</button>
+                        <button class="category-btn" data-category="Follow-up Messages" onclick="filterPrompts('Follow-up Messages')">Follow-up Messages</button>
+                        <button class="category-btn" data-category="Social Media Posts" onclick="filterPrompts('Social Media Posts')">Social Media</button>
+                        <button class="category-btn" data-category="Landing Pages" onclick="filterPrompts('Landing Pages')">Landing Pages</button>
+                        <button class="category-btn" data-category="Feedback Forms" onclick="filterPrompts('Feedback Forms')">Feedback Forms</button>
+                    </div>
+
+                    <div class="prompts-list" id="promptsList">
+                        <!-- Prompts will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification System -->
+    <div id="notifications" class="notifications"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+*.bak
+
+# Data cache and temporary files
+data_cache/
+mentions_cache.json
+cache/
+*.tmp
+*.temp
+*.cache
+
+# Sensitive data files
+emerald-digital-main-*.json
+*-credentials.json
+*-service-account.json
+*.pem
+*.key
+private/
+secrets/
+
+# Test coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Distribution / packaging
+.Python
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Local development
+local/
+.local/
+
+# Backups
+backup/
+backups/
+*.backup
+
+# Session data
+flask_session/
+sessions/
