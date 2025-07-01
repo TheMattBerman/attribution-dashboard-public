@@ -115,6 +115,12 @@ function initializeChart() {
     const ctx = document.getElementById('mentionsChart');
     if (!ctx) return;
     
+    // Check if dashboardState is defined and has mentionsData
+    if (!dashboardState || !dashboardState.mentionsData) {
+        console.warn('Dashboard state or mentions data not available for chart initialization');
+        return;
+    }
+    
     const data = currentTimeframe === '7d' ? 
         dashboardState.mentionsData['7d'] : 
         dashboardState.mentionsData['30d'];
@@ -166,7 +172,7 @@ function initializeChart() {
 
 // Helper function to update chart data and labels
 function updateChartData(timeframe) {
-    if (!mentionsChart || !dashboardState.mentionsData[timeframe]) return;
+    if (!mentionsChart || !dashboardState || !dashboardState.mentionsData || !dashboardState.mentionsData[timeframe]) return;
     
     const data = dashboardState.mentionsData[timeframe];
     mentionsChart.data.labels = data.map(d => d.day);
@@ -288,20 +294,25 @@ function createStatElement(label, value) {
     
     stat.appendChild(labelSpan);
     stat.appendChild(valueSpan);
-    
-    return stat;
-}
+function editCampaign(index) {
+    // Validate index is an integer within range
+    if (!Number.isInteger(index) || index < 0 || index >= dashboardState.campaigns.length) {
+        console.error('Invalid campaign index:', index);
+        return;
+    }
 
-// Helper function to create empty state elements securely
-function createEmptyStateElement(title, description, buttonText = null, buttonCallback = null) {
-    const emptyState = document.createElement('div');
-    emptyState.className = 'empty-state';
+    const campaign = dashboardState.campaigns[index];
+
+    document.getElementById('campaignName').value = campaign.name;
+    document.getElementById('campaignDelta').value = campaign.brandedSearchDelta;
+    document.getElementById('campaignMentions').value = campaign.mentions;
+    document.getElementById('campaignSignups').value = campaign.signups;
+    document.getElementById('campaignBuzz').value = campaign.communityBuzz;
+    document.getElementById('campaignNotes').value = campaign.notes;
+    document.getElementById('campaignIndex').value = index;
     
-    const titleElement = document.createElement('h3');
-    titleElement.textContent = title; // Safe text content
-    
-    const descElement = document.createElement('p');
-    descElement.textContent = description; // Safe text content
+    document.getElementById('campaignModal').style.display = 'block';
+}
     
     emptyState.appendChild(titleElement);
     emptyState.appendChild(descElement);
@@ -551,27 +562,83 @@ function populatePrompts(filterCategory = 'all') {
     categories.forEach(category => {
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'prompt-category';
-        categoryDiv.innerHTML = `<h3>${category}</h3>`;
+        
+        // Create category header securely
+        const categoryHeader = document.createElement('h3');
+        categoryHeader.textContent = category; // Safe text content
+        categoryDiv.appendChild(categoryHeader);
         
         const categoryPrompts = filteredPrompts.filter(p => p.category === category);
+        
+        // Build an index map for efficient lookup and to avoid O(n²) complexity
+        const promptIndexMap = new Map();
+        dashboardState.prompts.forEach((prompt, index) => {
+            promptIndexMap.set(prompt, index);
+        });
+        
         categoryPrompts.forEach(prompt => {
-            const promptDiv = document.createElement('div');
-            promptDiv.className = 'prompt-item';
-            promptDiv.innerHTML = `
-                <div class="prompt-header">
-                    <h4>${prompt.title}</h4>
-                    <div class="prompt-actions">
-                        <button onclick="copyPrompt('${prompt.title.replace(/'/g, "\\'")}')" class="btn btn--outline btn--sm">Copy</button>
-                        <button onclick="editPrompt(${dashboardState.prompts.indexOf(prompt)})" class="btn btn--secondary btn--sm">Edit</button>
-                    </div>
-                </div>
-                <div class="prompt-content">${prompt.content}</div>
-            `;
+            const promptDiv = createPromptElement(prompt, promptIndexMap.get(prompt));
             categoryDiv.appendChild(promptDiv);
         });
         
         container.appendChild(categoryDiv);
     });
+}
+
+// Helper function to create prompt elements securely
+function createPromptElement(prompt, promptIndex) {
+    const promptDiv = document.createElement('div');
+    promptDiv.className = 'prompt-item';
+    
+    // Create prompt header
+    const header = document.createElement('div');
+    header.className = 'prompt-header';
+    
+    const title = document.createElement('h4');
+    title.textContent = prompt.title; // Safe text content
+    
+    const actions = document.createElement('div');
+    actions.className = 'prompt-actions';
+    
+    // Create copy button with secure event binding
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn btn--outline btn--sm';
+    copyBtn.textContent = 'Copy';
+    copyBtn.addEventListener('click', () => copyPromptByIndex(promptIndex));
+    
+    // Create edit button with secure event binding
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn--secondary btn--sm';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => editPrompt(promptIndex));
+    
+    actions.appendChild(copyBtn);
+    actions.appendChild(editBtn);
+    header.appendChild(title);
+    header.appendChild(actions);
+    
+    // Create prompt content
+    const content = document.createElement('div');
+    content.className = 'prompt-content';
+    content.textContent = prompt.content; // Safe text content
+    
+    // Assemble the prompt element
+    promptDiv.appendChild(header);
+    promptDiv.appendChild(content);
+    
+    return promptDiv;
+}
+
+// Updated copy function using index instead of title for better performance and security
+function copyPromptByIndex(index) {
+    const prompt = dashboardState.prompts[index];
+    if (prompt) {
+        navigator.clipboard.writeText(prompt.content).then(() => {
+            if (typeof showNotification === 'function') {
+                showNotification('Prompt copied to clipboard', 'success');
+            }
+        });
+    }
 }
 
 function copyPrompt(title) {
@@ -813,6 +880,8 @@ window.populateCampaigns = populateCampaigns;
 window.populateEchoes = populateEchoes;
 window.populatePrompts = populatePrompts;
 window.copyPrompt = copyPrompt;
+window.copyPromptByIndex = copyPromptByIndex;
+window.createPromptElement = createPromptElement;
 window.closeModal = closeModal;
 window.addCampaign = addCampaign;
 window.addEchoEntry = addEchoEntry;

@@ -220,13 +220,15 @@ function filterMentions() {
 }
 
 // Toggle live feed on/off
-function toggleFeed() {
-    const button = event.target;
+function toggleFeed(event) {
+    // Handle case where event might not be passed (fallback to global event)
+    const actualEvent = event || window.event;
+    const button = actualEvent ? actualEvent.target : document.querySelector('.btn[onclick*="toggleFeed"]');
     const statusIndicator = document.getElementById('feedStatus');
     
     if (dashboardState.liveFeed.isActive) {
         dashboardState.liveFeed.isActive = false;
-        button.textContent = 'Resume Feed';
+        if (button) button.textContent = 'Resume Feed';
         if (statusIndicator) statusIndicator.classList.remove('active');
         stopLiveFeedUpdates();
         if (typeof showNotification === 'function') {
@@ -234,7 +236,7 @@ function toggleFeed() {
         }
     } else {
         dashboardState.liveFeed.isActive = true;
-        button.textContent = 'Pause Feed';
+        if (button) button.textContent = 'Pause Feed';
         if (statusIndicator) statusIndicator.classList.add('active');
         startLiveFeedUpdates();
         if (typeof showNotification === 'function') {

@@ -197,35 +197,7 @@ function exportFeed() {
     }
 }
 
-function toggleFeed() {
-    const isActive = dashboardState.liveFeed.isActive;
-    dashboardState.liveFeed.isActive = !isActive;
-    
-    const button = event.target;
-    const statusIndicator = document.getElementById('feedStatus');
-    
-    if (dashboardState.liveFeed.isActive) {
-        button.textContent = 'Pause Feed';
-        if (statusIndicator) {
-            statusIndicator.className = 'status-indicator active';
-        }
-        if (typeof showNotification === 'function') {
-            showNotification('Live feed resumed', 'success');
-        }
-    } else {
-        button.textContent = 'Resume Feed';
-        if (statusIndicator) {
-            statusIndicator.className = 'status-indicator paused';
-        }
-        if (typeof showNotification === 'function') {
-            showNotification('Live feed paused', 'info');
-        }
-    }
-    
-    if (typeof saveToLocalStorage === 'function') {
-        saveToLocalStorage();
-    }
-}
+
 
 function loadMoreMentions() {
     if (typeof showNotification === 'function') {
@@ -544,7 +516,7 @@ Notes: ___________
     }
 }
 
-function filterPrompts(category) {
+function filterPrompts(category, event) {
     // Update active category button
     document.querySelectorAll('.category-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -1087,7 +1059,6 @@ window.refreshFeed = refreshFeed;
 window.fetchFreshData = fetchFreshData;
 window.checkCacheStatus = checkCacheStatus;
 window.exportFeed = exportFeed;
-window.toggleFeed = toggleFeed;
 window.loadMoreMentions = loadMoreMentions;
 window.toggleTimeframe = toggleTimeframe;
 window.exportChart = exportChart;
