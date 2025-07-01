@@ -270,6 +270,46 @@ async function testGSCConnection() {
 }
 
 // Test Google Analytics connection
+async function testGAConnection() {
+    const apiKey = document.getElementById('gaApiKey')?.value;
+    
+    if (!apiKey) {
+        updateConnectionStatus('gaStatus', 'error', 'Please enter an API key');
+        return;
+    }
+    
+    updateConnectionStatus('gaStatus', 'testing', 'Testing connection...');
+    
+    try {
+        dashboardState.apiKeys.googleAnalytics = apiKey;
+        
+        // Simulate API test
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            dashboardState.apiStatus.googleAnalytics = 'connected';
+            updateConnectionStatus('gaStatus', 'success', 'Connected successfully');
+            
+            if (typeof fetchGA4Data === 'function') {
+                await fetchGA4Data();
+            }
+        } else {
+            dashboardState.apiStatus.googleAnalytics = 'error';
+            updateConnectionStatus('gaStatus', 'error', 'Invalid credentials or permissions');
+        }
+    } catch (error) {
+        dashboardState.apiStatus.googleAnalytics = 'error';
+        updateConnectionStatus('gaStatus', 'error', 'Connection test failed');
+    }
+    
+    if (typeof saveToLocalStorage === 'function') {
+        saveToLocalStorage();
+    }
+}
+
+// Test GA4 connection (alternative method)
 async function testGA4Connection() {
     const apiKey = document.getElementById('ga4ApiKey')?.value;
     
@@ -349,6 +389,308 @@ async function testSocialConnection() {
     }
 }
 
+// Test ScrapeCreators connection
+async function testSCConnection() {
+    const apiKey = document.getElementById('scApiKey')?.value;
+    
+    if (!apiKey) {
+        updateConnectionStatus('scStatus', 'error', 'Please enter an API key');
+        return;
+    }
+    
+    updateConnectionStatus('scStatus', 'testing', 'Testing connection...');
+    
+    try {
+        dashboardState.apiKeys.scrapeCreators = apiKey;
+        
+        // Simulate API test
+        await new Promise(resolve => setTimeout(resolve, 1800));
+        
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            dashboardState.apiStatus.scrapeCreators = 'connected';
+            updateConnectionStatus('scStatus', 'success', 'Connected successfully');
+        } else {
+            dashboardState.apiStatus.scrapeCreators = 'error';
+            updateConnectionStatus('scStatus', 'error', 'Invalid API key or rate limit exceeded');
+        }
+    } catch (error) {
+        dashboardState.apiStatus.scrapeCreators = 'error';
+        updateConnectionStatus('scStatus', 'error', 'Connection test failed');
+    }
+    
+    if (typeof saveToLocalStorage === 'function') {
+        saveToLocalStorage();
+    }
+}
+
+// Test Exa Search connection
+async function testExaConnection() {
+    const apiKey = document.getElementById('exaApiKey')?.value;
+    
+    if (!apiKey) {
+        updateConnectionStatus('exaStatus', 'error', 'Please enter an API key');
+        return;
+    }
+    
+    updateConnectionStatus('exaStatus', 'testing', 'Testing connection...');
+    
+    try {
+        dashboardState.apiKeys.exaSearch = apiKey;
+        
+        // Simulate API test
+        await new Promise(resolve => setTimeout(resolve, 1600));
+        
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            dashboardState.apiStatus.exaSearch = 'connected';
+            updateConnectionStatus('exaStatus', 'success', 'Connected successfully');
+        } else {
+            dashboardState.apiStatus.exaSearch = 'error';
+            updateConnectionStatus('exaStatus', 'error', 'Invalid API key or service unavailable');
+        }
+    } catch (error) {
+        dashboardState.apiStatus.exaSearch = 'error';
+        updateConnectionStatus('exaStatus', 'error', 'Connection test failed');
+    }
+    
+    if (typeof saveToLocalStorage === 'function') {
+        saveToLocalStorage();
+    }
+}
+
+// Test Email Marketing connection
+async function testEmailConnection() {
+    const apiKey = document.getElementById('emailApiKey')?.value;
+    
+    if (!apiKey) {
+        updateConnectionStatus('emailStatus', 'error', 'Please enter an API key');
+        return;
+    }
+    
+    updateConnectionStatus('emailStatus', 'testing', 'Testing connection...');
+    
+    try {
+        dashboardState.apiKeys.emailMarketing = apiKey;
+        
+        // Simulate API test
+        await new Promise(resolve => setTimeout(resolve, 1400));
+        
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            dashboardState.apiStatus.emailMarketing = 'connected';
+            updateConnectionStatus('emailStatus', 'success', 'Connected successfully');
+        } else {
+            dashboardState.apiStatus.emailMarketing = 'error';
+            updateConnectionStatus('emailStatus', 'error', 'Invalid API key or authentication failed');
+        }
+    } catch (error) {
+        dashboardState.apiStatus.emailMarketing = 'error';
+        updateConnectionStatus('emailStatus', 'error', 'Connection test failed');
+    }
+    
+    if (typeof saveToLocalStorage === 'function') {
+        saveToLocalStorage();
+    }
+}
+
+// Test CRM/Calendar connection
+async function testCRMConnection() {
+    const apiKey = document.getElementById('crmApiKey')?.value;
+    
+    if (!apiKey) {
+        updateConnectionStatus('crmStatus', 'error', 'Please enter an API key');
+        return;
+    }
+    
+    updateConnectionStatus('crmStatus', 'testing', 'Testing connection...');
+    
+    try {
+        dashboardState.apiKeys.crmCalendar = apiKey;
+        
+        // Simulate API test
+        await new Promise(resolve => setTimeout(resolve, 1700));
+        
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            dashboardState.apiStatus.crmCalendar = 'connected';
+            updateConnectionStatus('crmStatus', 'success', 'Connected successfully');
+        } else {
+            dashboardState.apiStatus.crmCalendar = 'error';
+            updateConnectionStatus('crmStatus', 'error', 'Invalid API key or permissions');
+        }
+    } catch (error) {
+        dashboardState.apiStatus.crmCalendar = 'error';
+        updateConnectionStatus('crmStatus', 'error', 'Connection test failed');
+    }
+    
+    if (typeof saveToLocalStorage === 'function') {
+        saveToLocalStorage();
+    }
+}
+
+// CSV Template Functions
+function downloadTemplate(templateType) {
+    const templates = {
+        'search-volume': {
+            filename: 'search-volume-template.csv',
+            content: 'date,query,impressions,clicks,avg_position\n2024-01-01,"brand name",1000,50,2.1\n2024-01-02,"brand name review",800,40,1.8'
+        },
+        'direct-traffic': {
+            filename: 'direct-traffic-template.csv',
+            content: 'date,sessions,source_medium,landing_page\n2024-01-01,150,"(direct)/(none)","/"\n2024-01-02,120,"(direct)/(none)","/products"'
+        },
+        'inbound-messages': {
+            filename: 'inbound-messages-template.csv',
+            content: 'date,source,message_type,content_ref\n2024-01-01,"email","inquiry","product demo request"\n2024-01-02,"linkedin","mention","saw your recent post"'
+        },
+        'community-engagement': {
+            filename: 'community-engagement-template.csv',
+            content: 'date,platform,engagement_type,metrics\n2024-01-01,"reddit","mention","{\"upvotes\": 45, \"comments\": 12}"\n2024-01-02,"twitter","retweet","{\"likes\": 23, \"retweets\": 8}"'
+        },
+        'first-party': {
+            filename: 'first-party-template.csv',
+            content: 'date,source,conversion_type,attribution_source\n2024-01-01,"newsletter","signup","blog post"\n2024-01-02,"demo","trial","google search"'
+        }
+    };
+    
+    const template = templates[templateType];
+    if (!template) {
+        if (typeof showNotification === 'function') {
+            showNotification('Template not found', 'error');
+        }
+        return;
+    }
+    
+    const blob = new Blob([template.content], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = template.filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    if (typeof showNotification === 'function') {
+        showNotification(`${template.filename} downloaded`, 'success');
+    }
+}
+
+function handleTemplateUpload(templateType, input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const statusElement = document.getElementById(`${templateType.replace('-', '')}Status`);
+    if (statusElement) {
+        statusElement.textContent = `Uploaded: ${file.name}`;
+        statusElement.className = 'upload-status success';
+    }
+    
+    // Here you would typically parse the CSV and store the data
+    // For now, we'll just simulate successful upload
+    if (typeof showNotification === 'function') {
+        showNotification(`${file.name} uploaded successfully`, 'success');
+    }
+    
+    // Store file reference in dashboard state
+    if (!dashboardState.uploadedFiles) {
+        dashboardState.uploadedFiles = {};
+    }
+    dashboardState.uploadedFiles[templateType] = {
+        name: file.name,
+        size: file.size,
+        uploadDate: new Date().toISOString()
+    };
+    
+    if (typeof saveToLocalStorage === 'function') {
+        saveToLocalStorage();
+    }
+}
+
+// Environment Configuration Functions
+function copyEnvTemplate() {
+    const template = `# Attribution Dashboard Configuration
+# Copy this file to .env and add your actual API keys
+
+# Brand Configuration
+BRAND_NAME=YourBrandName
+SECRET_KEY=your-secret-key-change-this-in-production
+
+# API Keys for Social Media Monitoring
+SCRAPE_CREATORS_API_KEY=your_scrape_creators_api_key_here
+EXA_API_KEY=your_exa_search_api_key_here
+
+# Optional: Google APIs (if you have them)
+GOOGLE_SEARCH_CONSOLE_API_KEY=your_gsc_api_key_here
+GOOGLE_ANALYTICS_API_KEY=your_ga_api_key_here
+
+# Optional: Email Marketing APIs
+MAILCHIMP_API_KEY=your_mailchimp_api_key_here
+CONVERTKIT_API_KEY=your_convertkit_api_key_here
+
+# Optional: CRM/Calendar APIs
+CALENDLY_API_KEY=your_calendly_api_key_here
+HUBSPOT_API_KEY=your_hubspot_api_key_here`;
+
+    navigator.clipboard.writeText(template).then(() => {
+        if (typeof showNotification === 'function') {
+            showNotification('Environment template copied to clipboard', 'success');
+        }
+    }).catch(err => {
+        console.error('Failed to copy template:', err);
+        if (typeof showNotification === 'function') {
+            showNotification('Failed to copy template', 'error');
+        }
+    });
+}
+
+async function checkEnvStatus() {
+    // Check if backend is available and has environment variables configured
+    try {
+        const response = await fetch('/api/env-status');
+        if (response.ok) {
+            const envStatus = await response.json();
+            
+            // Update status display
+            const brandNameElement = document.getElementById('envBrandName');
+            const scrapeCreatorsElement = document.getElementById('envScrapeCreators');
+            const exaSearchElement = document.getElementById('envExaSearch');
+            
+            if (brandNameElement) {
+                brandNameElement.textContent = envStatus.brand_name || 'Not configured';
+                brandNameElement.className = envStatus.brand_name ? 'status-value connected' : 'status-value disconnected';
+            }
+            
+            if (scrapeCreatorsElement) {
+                scrapeCreatorsElement.textContent = envStatus.scrape_creators_configured ? 'Configured' : 'Not configured';
+                scrapeCreatorsElement.className = envStatus.scrape_creators_configured ? 'status-value connected' : 'status-value disconnected';
+            }
+            
+            if (exaSearchElement) {
+                exaSearchElement.textContent = envStatus.exa_search_configured ? 'Configured' : 'Not configured';
+                exaSearchElement.className = envStatus.exa_search_configured ? 'status-value connected' : 'status-value disconnected';
+            }
+        } else {
+            throw new Error('Backend not available');
+        }
+    } catch (error) {
+        console.error('Failed to check environment status:', error);
+        // Update with offline status
+        ['envBrandName', 'envScrapeCreators', 'envExaSearch'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = 'Backend offline';
+                element.className = 'status-value disconnected';
+            }
+        });
+    }
+}
+
 // Export functions for global access
 window.selectSetupMethod = selectSetupMethod;
 window.showWizardStep = showWizardStep;
@@ -359,5 +701,14 @@ window.finishSetup = finishSetup;
 window.closeWelcome = closeWelcome;
 window.updateConnectionStatus = updateConnectionStatus;
 window.testGSCConnection = testGSCConnection;
+window.testGAConnection = testGAConnection;
 window.testGA4Connection = testGA4Connection;
+window.testSCConnection = testSCConnection;
+window.testExaConnection = testExaConnection;
+window.testEmailConnection = testEmailConnection;
+window.testCRMConnection = testCRMConnection;
 window.testSocialConnection = testSocialConnection;
+window.downloadTemplate = downloadTemplate;
+window.handleTemplateUpload = handleTemplateUpload;
+window.copyEnvTemplate = copyEnvTemplate;
+window.checkEnvStatus = checkEnvStatus;

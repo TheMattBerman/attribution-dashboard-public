@@ -22,15 +22,15 @@ function initializeNavigation() {
 }
 
 function navigateToSection(sectionName) {
-    // Hide all sections
-    document.querySelectorAll('.section').forEach(section => {
-        section.style.display = 'none';
+    // Hide all sections by removing active class
+    document.querySelectorAll('.dashboard-section').forEach(section => {
+        section.classList.remove('active');
     });
     
-    // Show target section
+    // Show target section by adding active class
     const targetSection = document.getElementById(sectionName);
     if (targetSection) {
-        targetSection.style.display = 'block';
+        targetSection.classList.add('active');
         
         // Update URL hash
         window.location.hash = sectionName;
@@ -42,19 +42,42 @@ function navigateToSection(sectionName) {
 
 function loadSectionData(sectionName) {
     switch (sectionName) {
-        case 'dashboard':
+        case 'signalsSection':
             loadDashboardData();
             break;
-        case 'setup':
-            // Setup data is handled by setup wizard component
+        case 'mentions':
+            // Initialize chart if not already done
+            if (!mentionsChart) {
+                initializeChart();
+            }
+            break;
+        case 'echoes':
+            if (typeof populateEchoes === 'function') {
+                populateEchoes();
+            }
+            break;
+        case 'campaigns':
+            if (typeof populateCampaigns === 'function') {
+                populateCampaigns();
+            }
+            break;
+        case 'liveFeedSection':
+            if (typeof populateLiveFeed === 'function') {
+                populateLiveFeed();
+            }
+            if (typeof updateFeedStats === 'function') {
+                updateFeedStats();
+            }
             break;
         case 'prompts':
             if (typeof populatePrompts === 'function') {
                 populatePrompts();
             }
             break;
-        case 'testing':
-            // Testing section doesn't need special loading
+        case 'integrations':
+        case 'social':
+        case 'sentimentTesting':
+            // These sections don't need special loading
             break;
     }
 }
@@ -391,27 +414,42 @@ function handleEchoFormSubmit(event) {
 }
 
 // Prompts Management (if not moved to separate component)
-function populatePrompts() {
-    const container = document.getElementById('promptsContainer');
+function populatePrompts(filterCategory = 'all') {
+    // Use the new filtered version if available
+    if (typeof populatePromptsFiltered === 'function') {
+        populatePromptsFiltered(filterCategory);
+        return;
+    }
+    
+    // Fallback to original implementation
+    const container = document.getElementById('promptsList');
     if (!container) return;
     
     container.innerHTML = '';
     
-    const categories = [...new Set(dashboardState.prompts.map(p => p.category))];
+    let filteredPrompts = dashboardState.prompts;
+    if (filterCategory !== 'all') {
+        filteredPrompts = dashboardState.prompts.filter(p => p.category === filterCategory);
+    }
+    
+    const categories = [...new Set(filteredPrompts.map(p => p.category))];
     
     categories.forEach(category => {
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'prompt-category';
         categoryDiv.innerHTML = `<h3>${category}</h3>`;
         
-        const categoryPrompts = dashboardState.prompts.filter(p => p.category === category);
+        const categoryPrompts = filteredPrompts.filter(p => p.category === category);
         categoryPrompts.forEach(prompt => {
             const promptDiv = document.createElement('div');
             promptDiv.className = 'prompt-item';
             promptDiv.innerHTML = `
                 <div class="prompt-header">
                     <h4>${prompt.title}</h4>
-                    <button onclick="copyPrompt('${prompt.title.replace(/'/g, "\\'")}')" class="btn-small">Copy</button>
+                    <div class="prompt-actions">
+                        <button onclick="copyPrompt('${prompt.title.replace(/'/g, "\\'")}')" class="btn btn--outline btn--sm">Copy</button>
+                        <button onclick="editPrompt(${dashboardState.prompts.indexOf(prompt)})" class="btn btn--secondary btn--sm">Edit</button>
+                    </div>
                 </div>
                 <div class="prompt-content">${prompt.content}</div>
             `;
@@ -596,7 +634,7 @@ async function initializeDashboard() {
         checkForEmptyStates();
         
         // Navigate to initial section
-        const initialSection = window.location.hash.substring(1) || 'dashboard';
+        const initialSection = window.location.hash.substring(1) || 'signalsSection';
         navigateToSection(initialSection);
         
         // Show setup wizard if not completed
@@ -617,10 +655,41 @@ async function initializeDashboard() {
     }
 }
 
+// Module loading management
+let modulesLoaded = {
+    dashboardState: false,
+    storageManager: false,
+    notificationSystem: false,
+    setupWizard: false,
+    signalWidgets: false,
+    liveFeed: false,
+    missingFunctions: false
+};
+
+function checkModuleLoaded(moduleName) {
+    modulesLoaded[moduleName] = true;
+    
+    // Check if all critical modules are loaded
+    const criticalModules = ['dashboardState', 'notificationSystem', 'missingFunctions'];
+    const allCriticalLoaded = criticalModules.every(module => modulesLoaded[module]);
+    
+    if (allCriticalLoaded && !window.dashboardInitialized) {
+        window.dashboardInitialized = true;
+        initializeDashboard();
+    }
+}
+
 // Wait for DOM and all modules to load
 document.addEventListener('DOMContentLoaded', function() {
-    // Small delay to ensure all modules are loaded
-    setTimeout(initializeDashboard, 100);
+    // Check if essential modules are already loaded
+    if (typeof dashboardState !== 'undefined') modulesLoaded.dashboardState = true;
+    if (typeof showNotification !== 'undefined') modulesLoaded.notificationSystem = true;
+    if (typeof refreshData !== 'undefined') modulesLoaded.missingFunctions = true;
+    
+    // Start initialization with a delay to allow module loading
+    setTimeout(() => {
+        checkModuleLoaded('dom');
+    }, 200);
 });
 
 // Export key functions for global access
