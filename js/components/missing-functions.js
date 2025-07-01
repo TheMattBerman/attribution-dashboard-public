@@ -174,55 +174,146 @@ function refreshFeed() {
     }, 1000);
 }
 
-function fetchFreshData() {
+// Fetch fresh data from APIs (force refresh)
+async function fetchFreshData() {
     if (typeof showNotification === 'function') {
-        showNotification('Fetching fresh data from APIs...', 'info');
+        showNotification('🔄 Fetching fresh data from APIs...', 'info');
     }
     
-    // Simulate API data fetch
-    setTimeout(() => {
-        // Update last update timestamp
-        dashboardState.liveFeed.lastUpdate = new Date();
+    try {
+        const daysBack = (typeof currentTimeframe !== 'undefined' && currentTimeframe === '7d') ? 7 : 30;
         
-        const lastUpdateElement = document.getElementById('lastUpdate');
-        if (lastUpdateElement) {
-            lastUpdateElement.textContent = 'Just now';
+        const response = await fetch('/api/refresh-mentions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                days_back: daysBack,
+                platform: 'all'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            const mentions = result.data || [];
+            
+            // Initialize liveFeed if it doesn't exist
+            if (!dashboardState.liveFeed) {
+                dashboardState.liveFeed = {
+                    mentions: [],
+                    isActive: true,
+                    lastUpdate: new Date(),
+                    filters: {
+                        platform: '',
+                        sentiment: '',
+                        keyword: ''
+                    }
+                };
+            }
+            
+            // Clear existing mentions and add new ones
+            dashboardState.liveFeed.mentions = [];
+            
+            mentions.forEach(mention => {
+                dashboardState.liveFeed.mentions.push({
+                    id: mention.id || Date.now() + Math.random(),
+                    timestamp: mention.timestamp || mention.created_at || new Date().toISOString(),
+                    type: mention.platform === 'web' ? 'Web Mention' : 'Social Mention',
+                    content: mention.content || mention.text || mention.title || 'No content available',
+                    platform: mention.platform || 'unknown',
+                    author: mention.author || 'Anonymous',
+                    engagement: mention.engagement || 0,
+                    sentiment: mention.sentiment || 'neutral',
+                    sentiment_details: mention.sentiment_details || {},
+                    url: mention.url || '#',
+                    source: 'fresh_api'
+                });
+            });
+            
+            // Sort by timestamp (newest first)
+            dashboardState.liveFeed.mentions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            // Update display
+            if (typeof populateLiveFeed === 'function') {
+                populateLiveFeed();
+            }
+            if (typeof updateFeedStats === 'function') {
+                updateFeedStats();
+            }
+            
+            // Update last update time
+            dashboardState.liveFeed.lastUpdate = new Date();
+            
+            if (typeof saveToLocalStorage === 'function') {
+                saveToLocalStorage();
+            }
+            
+            if (typeof showNotification === 'function') {
+                if (mentions.length > 0) {
+                    showNotification(`✅ Fetched ${mentions.length} fresh mentions from APIs!`, 'success');
+                } else {
+                    showNotification('⚠️ No mentions found. Check your API configuration and brand name.', 'warning');
+                }
+            }
+        } else {
+            throw new Error(result.message || 'Failed to fetch fresh data');
         }
-        
-        if (typeof populateLiveFeed === 'function') {
-            populateLiveFeed();
-        }
-        
+    } catch (error) {
+        console.error('Error fetching fresh data:', error);
         if (typeof showNotification === 'function') {
-            showNotification('Fresh data fetched successfully', 'success');
+            showNotification(`❌ Failed to fetch fresh data: ${error.message}`, 'error');
         }
-        
-        if (typeof saveToLocalStorage === 'function') {
-            saveToLocalStorage();
-        }
-    }, 2000);
+    }
 }
 
-function checkCacheStatus() {
-    if (typeof showNotification === 'function') {
-        showNotification('Checking cache status...', 'info');
-    }
-    
-    // Simulate cache check
-    setTimeout(() => {
-        const cacheInfo = {
-            lastUpdate: dashboardState.liveFeed.lastUpdate instanceof Date ? 
-                       dashboardState.liveFeed.lastUpdate : new Date(dashboardState.liveFeed.lastUpdate || Date.now()),
-            mentionsCount: dashboardState.liveFeed.mentions?.length || 0,
-            apiStatus: 'Online'
-        };
+// Check cache status
+async function checkCacheStatus() {
+    try {
+        const response = await fetch('/api/cache-status', {
+            credentials: 'include'
+        });
         
-        const statusMessage = `Cache Status: ${cacheInfo.mentionsCount} mentions, Last update: ${cacheInfo.lastUpdate.toLocaleTimeString()}`;
+        const result = await response.json();
         
-        if (typeof showNotification === 'function') {
-            showNotification(statusMessage, 'info');
+        if (result.status === 'success') {
+            let message = '';
+            
+            if (result.cached) {
+                const ageHours = result.file_age_hours || 0;
+                const isStale = result.is_stale || ageHours > 24;
+                
+                message = `📁 Cache: ${result.total_mentions || 0} mentions`;
+                message += `\n⏰ Age: ${ageHours.toFixed(1)} hours`;
+                message += `\n📂 Size: ${result.file_size_kb || 0} KB`;
+                message += `\n🏷️ Brand: ${result.brand_name || 'Not set'}`;
+                
+                if (isStale) {
+                    message += '\n⚠️ Cache is stale (>24h old)';
+                }
+                
+                if (typeof showNotification === 'function') {
+                    showNotification(message, isStale ? 'warning' : 'info');
+                }
+            } else {
+                message = '📁 No cache file exists';
+                if (typeof showNotification === 'function') {
+                    showNotification(message, 'info');
+                }
+            }
+            
+            console.log('Cache Status:', result);
+        } else {
+            throw new Error(result.message || 'Failed to check cache status');
         }
-    }, 500);
+    } catch (error) {
+        console.error('Error checking cache status:', error);
+        if (typeof showNotification === 'function') {
+            showNotification(`❌ Failed to check cache: ${error.message}`, 'error');
+        }
+    }
 }
 
 function exportFeed() {
@@ -242,8 +333,6 @@ function exportFeed() {
         showNotification(`${filename} exported successfully`, 'success');
     }
 }
-
-
 
 function loadMoreMentions() {
     if (typeof showNotification === 'function') {

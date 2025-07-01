@@ -387,6 +387,17 @@ pre code {
   transform: translateY(-1px);
 }
 
+.btn--info {
+  background: #17a2b8;
+  color: white;
+  border: 1px solid #17a2b8;
+}
+
+.btn--info:hover {
+  background: #138496;
+  border-color: #117a8b;
+}
+
 .btn--sm {
   padding: var(--space-4) var(--space-12);
   font-size: var(--font-size-sm);

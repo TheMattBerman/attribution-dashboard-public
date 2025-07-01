@@ -656,10 +656,11 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
                 <div class="section-header">
                     <h2>Live Mentions Feed</h2>
                     <div class="section-actions">
-                        <button class="btn btn--secondary" onclick="refreshFeed()">Refresh Feed</button>
-                <button class="btn btn--primary" onclick="fetchFreshData()">Fetch Fresh Data</button>
-                <button class="btn btn--tertiary" onclick="checkCacheStatus()">Cache Status</button>
-                        <button class="btn btn--outline" onclick="exportFeed()">Export Mentions</button>
+                        <button class="btn btn--secondary" onclick="refreshFeed()">🔄 Refresh Feed</button>
+                        <button class="btn btn--primary" onclick="fetchFreshData()">⚡ Fetch Fresh Data</button>
+                        <button class="btn btn--tertiary" onclick="checkCacheStatus()">📁 Cache Status</button>
+                        <button class="btn btn--info" onclick="diagnoseLiveFeed()" title="Run diagnostic check">🔍 Diagnose</button>
+                        <button class="btn btn--outline" onclick="exportFeed()">📤 Export</button>
                     </div>
                 </div>
 
@@ -979,6 +980,9 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
     <script src="js/components/signal-widgets.js"></script>
     <script src="js/components/live-feed.js"></script>
     <script src="js/components/missing-functions.js"></script>
+    
+    <!-- Diagnostic Tools -->
+    <script src="js/utils/live-feed-diagnostic.js"></script>
     
     <!-- Main Application (depends on all modules) -->
     <script src="app.js"></script>

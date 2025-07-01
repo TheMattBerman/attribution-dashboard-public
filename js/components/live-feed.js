@@ -504,27 +504,47 @@ async function refreshFeedWithRealData() {
         }
         
         if (result.status === 'success') {
-            const mentions = result.data;
+            const mentions = result.data || [];
             console.log(`API returned ${mentions.length} mentions for live feed (source: ${result.source || 'unknown'})`);
             
-            // Clear existing mentions
-            dashboardState.liveFeed.mentions = [];
+            // Initialize liveFeed if it doesn't exist
+            if (!dashboardState.liveFeed) {
+                dashboardState.liveFeed = {
+                    mentions: [],
+                    isActive: true,
+                    lastUpdate: new Date(),
+                    filters: {
+                        platform: '',
+                        sentiment: '',
+                        keyword: ''
+                    }
+                };
+            }
+            
+            // Clear existing mentions only if we have new data
+            if (mentions.length > 0) {
+                dashboardState.liveFeed.mentions = [];
+            }
             
             // Convert API data to dashboard format
             mentions.forEach(mention => {
-                dashboardState.liveFeed.mentions.push({
-                    id: mention.id || Date.now() + Math.random(),
-                    timestamp: mention.timestamp || mention.created_at || new Date().toISOString(),
-                    type: mention.platform === 'web' ? 'Web Mention' : 'Social Mention',
-                    content: mention.content || mention.text || 'No content available',
-                    platform: mention.platform || 'unknown',
-                    author: mention.author || 'Anonymous',
-                    engagement: mention.engagement || 0,
-                    sentiment: mention.sentiment || 'neutral',
-                    sentiment_details: mention.sentiment_details || {},
-                    url: mention.url || '#',
-                    source: 'api'
-                });
+                // Skip duplicates
+                const exists = dashboardState.liveFeed.mentions.find(m => m.id === mention.id);
+                if (!exists) {
+                    dashboardState.liveFeed.mentions.push({
+                        id: mention.id || Date.now() + Math.random(),
+                        timestamp: mention.timestamp || mention.created_at || new Date().toISOString(),
+                        type: mention.platform === 'web' ? 'Web Mention' : 'Social Mention',
+                        content: mention.content || mention.text || mention.title || 'No content available',
+                        platform: mention.platform || 'unknown',
+                        author: mention.author || 'Anonymous',
+                        engagement: mention.engagement || 0,
+                        sentiment: mention.sentiment || 'neutral',
+                        sentiment_details: mention.sentiment_details || {},
+                        url: mention.url || '#',
+                        source: result.source || 'api'
+                    });
+                }
             });
             
             // Sort by timestamp (newest first)
@@ -534,19 +554,29 @@ async function refreshFeedWithRealData() {
             populateLiveFeed();
             updateFeedStats();
             
+            // Update last update time
+            dashboardState.liveFeed.lastUpdate = new Date();
+            
             if (typeof saveToLocalStorage === 'function') {
                 saveToLocalStorage();
             }
             
             // Show success notification with source info
             if (typeof showNotification === 'function') {
-                if (result.source === 'live_api') {
-                    showNotification(`Loaded ${mentions.length} fresh mentions from APIs`, 'success');
-                } else if (result.source === 'cache') {
-                    showNotification(`Loaded ${mentions.length} cached mentions`, 'info');
+                if (mentions.length > 0) {
+                    if (result.source === 'live_api') {
+                        showNotification(`✅ Loaded ${mentions.length} fresh mentions from APIs`, 'success');
+                    } else if (result.source === 'cache') {
+                        showNotification(`📁 Loaded ${mentions.length} cached mentions`, 'info');
+                    } else {
+                        showNotification(`✅ Loaded ${mentions.length} mentions`, 'success');
+                    }
+                } else {
+                    showNotification('⚠️ No mentions found. Try refreshing or check your API configuration.', 'warning');
                 }
             }
         } else {
+            console.error('API response error:', result);
             throw new Error(result.message || 'Failed to fetch mentions');
         }
     } catch (error) {
