@@ -1,6 +1,6 @@
 # Attribution Dashboard
 
-![Social Listening Dashboard]([https://github.com/user-attachments/assets/dashboard-preview.png](https://github.com/TheMattBerman/attribution-dashboard-public/blob/5a52dfa5b011759ce346b8c5570e20a3887c31c9/social-listening-dashboard.jpg))
+![Social Listening Dashboard](https://github.com/TheMattBerman/attribution-dashboard-public/raw/main/social-listening-dashboard.jpg)
 
 A comprehensive social media monitoring and attribution tracking dashboard that helps you understand where your brand mentions are coming from across the internet.
 
