@@ -139,7 +139,7 @@ async function testGA4Connection() {
     
     try {
         // Store API key
-        dashboardState.apiKeys.googleAnalytics = apiKey;
+        dashboardState.apiKeys.googleAnalyticsGA4 = apiKey;
         
         // Test the API connection via backend
         const response = await fetch('/api/test-ga4', {
@@ -156,7 +156,7 @@ async function testGA4Connection() {
         const result = await response.json();
         
         if (result.status === 'success') {
-            dashboardState.apiStatus.googleAnalytics = 'connected';
+            dashboardState.apiStatus.googleAnalyticsGA4 = 'connected';
             if (typeof updateConnectionStatus === 'function') {
                 updateConnectionStatus('ga4Status', 'success', 'Connected successfully');
             }
@@ -164,13 +164,13 @@ async function testGA4Connection() {
             // Fetch initial data
             await fetchGA4Data();
         } else {
-            dashboardState.apiStatus.googleAnalytics = 'error';
+            dashboardState.apiStatus.googleAnalyticsGA4 = 'error';
             if (typeof updateConnectionStatus === 'function') {
                 updateConnectionStatus('ga4Status', 'error', result.message || 'Invalid credentials or permissions');
             }
         }
     } catch (error) {
-        dashboardState.apiStatus.googleAnalytics = 'error';
+        dashboardState.apiStatus.googleAnalyticsGA4 = 'error';
         if (typeof updateConnectionStatus === 'function') {
             updateConnectionStatus('ga4Status', 'error', 'Connection test failed');
         }
@@ -314,7 +314,7 @@ async function fetchGAData() {
 
 // Fetch GA4 data (modern Google Analytics)
 async function fetchGA4Data() {
-    if (dashboardState.apiStatus.googleAnalytics !== 'connected') return;
+    if (dashboardState.apiStatus.googleAnalyticsGA4 !== 'connected') return;
     
     try {
         if (typeof showNotification === 'function') {
@@ -378,6 +378,10 @@ async function refreshAnalyticsData() {
     }
     
     if (dashboardState.apiStatus.googleAnalytics === 'connected') {
+        promises.push(fetchGAData());
+    }
+    
+    if (dashboardState.apiStatus.googleAnalyticsGA4 === 'connected') {
         promises.push(fetchGA4Data());
     }
     
@@ -449,7 +453,8 @@ function getAnalyticsStats() {
         totalTraffic: (signals.brandedSearchVolume || 0) + (signals.directTraffic || 0),
         attributionScore: signals.attributionScore || 0,
         hasRealData: dashboardState.apiStatus.googleSearchConsole === 'connected' || 
-                    dashboardState.apiStatus.googleAnalytics === 'connected'
+                    dashboardState.apiStatus.googleAnalytics === 'connected' ||
+                    dashboardState.apiStatus.googleAnalyticsGA4 === 'connected'
     };
 }
 

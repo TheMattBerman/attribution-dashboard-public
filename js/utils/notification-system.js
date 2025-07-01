@@ -1,17 +1,110 @@
 // Notification System Module
 
-// Show notification toast
-function showNotification(message, type = 'info') {
-    // Create notification element
+// Helper function to create notification elements programmatically (secure)
+function createNotificationElement(message, type, options = {}) {
+    // Create main notification container
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">${getNotificationIcon(type)}</span>
-            <span class="notification-message">${message}</span>
-            <button class="notification-close" onclick="closeNotification(this)">&times;</button>
-        </div>
-    `;
+    
+    // Create content container
+    const content = document.createElement('div');
+    content.className = 'notification-content';
+    
+    // Create icon element
+    const icon = document.createElement('span');
+    icon.className = 'notification-icon';
+    icon.textContent = getNotificationIcon(type);
+    
+    // Create message element - use textContent for security
+    const messageEl = document.createElement('span');
+    messageEl.className = 'notification-message';
+    
+    // Handle loading spinner case
+    if (options.hasSpinner) {
+        const spinner = document.createElement('div');
+        spinner.className = 'loading-spinner';
+        messageEl.appendChild(spinner);
+        messageEl.appendChild(document.createTextNode(' ' + message));
+    } else {
+        messageEl.textContent = message;
+    }
+    
+    // Create close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'notification-close';
+    closeBtn.textContent = '×';
+    closeBtn.onclick = function() {
+        closeNotification(this);
+    };
+    
+    // Assemble the notification
+    content.appendChild(icon);
+    content.appendChild(messageEl);
+    
+    // Add action button if specified
+    if (options.actionText && options.actionCallback) {
+        const actionBtn = document.createElement('button');
+        actionBtn.className = 'notification-action-btn';
+        actionBtn.textContent = options.actionText;
+        actionBtn.onclick = options.actionCallback;
+        content.appendChild(actionBtn);
+    }
+    
+    // Add confirmation buttons if specified
+    if (options.isConfirmation) {
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'notification-actions';
+        
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'notification-btn notification-confirm';
+        confirmBtn.textContent = 'Confirm';
+        confirmBtn.onclick = options.onConfirm;
+        
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'notification-btn notification-cancel';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.onclick = options.onCancel;
+        
+        actionsDiv.appendChild(confirmBtn);
+        actionsDiv.appendChild(cancelBtn);
+        content.appendChild(actionsDiv);
+    }
+    
+    // Add progress bar if specified
+    if (options.hasProgress) {
+        const progressBar = document.createElement('div');
+        progressBar.className = 'notification-progress-bar';
+        
+        const progressFill = document.createElement('div');
+        progressFill.className = 'notification-progress-fill';
+        progressFill.style.width = `${options.progress || 0}%`;
+        
+        const progressText = document.createElement('span');
+        progressText.className = 'notification-progress-text';
+        progressText.textContent = `${options.progress || 0}%`;
+        
+        progressBar.appendChild(progressFill);
+        content.appendChild(progressBar);
+        content.appendChild(progressText);
+    }
+    
+    content.appendChild(closeBtn);
+    notification.appendChild(content);
+    
+    // Add additional classes if specified
+    if (options.additionalClasses) {
+        options.additionalClasses.forEach(cls => {
+            notification.classList.add(cls);
+        });
+    }
+    
+    return notification;
+}
+
+// Show notification toast
+function showNotification(message, type = 'info') {
+    // Create notification element securely
+    const notification = createNotificationElement(message, type);
     
     // Position notification (stack multiple notifications)
     const existingNotifications = document.querySelectorAll('.notification');
@@ -84,7 +177,29 @@ function repositionNotifications() {
 
 // Show loading notification
 function showLoadingNotification(message) {
-    showNotification(`<div class="loading-spinner"></div> ${message}`, 'info');
+    // Create notification element with spinner using secure method
+    const notification = createNotificationElement(message, 'info', { hasSpinner: true });
+    
+    // Position notification (stack multiple notifications)
+    const existingNotifications = document.querySelectorAll('.notification');
+    const topOffset = 20 + (existingNotifications.length * 80);
+    notification.style.top = `${topOffset}px`;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    
+    // Auto-remove after duration
+    const duration = getNotificationDuration('info');
+    if (duration > 0) {
+        setTimeout(() => {
+            closeNotification(notification);
+        }, duration);
+    }
 }
 
 // Show success notification with custom duration
@@ -141,15 +256,9 @@ function showInfoNotification(message, duration = 3000) {
 
 // Show persistent notification (doesn't auto-close)
 function showPersistentNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type} notification-persistent`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">${getNotificationIcon(type)}</span>
-            <span class="notification-message">${message}</span>
-            <button class="notification-close" onclick="closeNotification(this)">&times;</button>
-        </div>
-    `;
+    const notification = createNotificationElement(message, type, { 
+        additionalClasses: ['notification-persistent'] 
+    });
     
     document.body.appendChild(notification);
     
@@ -170,16 +279,11 @@ function clearAllNotifications() {
 
 // Show notification with action button
 function showActionNotification(message, actionText, actionCallback, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type} notification-action`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">${getNotificationIcon(type)}</span>
-            <span class="notification-message">${message}</span>
-            <button class="notification-action-btn" onclick="${actionCallback}">${actionText}</button>
-            <button class="notification-close" onclick="closeNotification(this)">&times;</button>
-        </div>
-    `;
+    const notification = createNotificationElement(message, type, {
+        actionText: actionText,
+        actionCallback: actionCallback,
+        additionalClasses: ['notification-action']
+    });
     
     document.body.appendChild(notification);
     
@@ -197,35 +301,23 @@ function showActionNotification(message, actionText, actionCallback, type = 'inf
 
 // Show confirmation notification
 function showConfirmationNotification(message, onConfirm, onCancel = null) {
-    const notification = document.createElement('div');
-    notification.className = 'notification notification-confirmation';
+    const notification = createNotificationElement(message, 'confirmation', {
+        isConfirmation: true,
+        onConfirm: () => {
+            closeNotification(notification);
+            if (onConfirm) onConfirm();
+        },
+        onCancel: () => {
+            closeNotification(notification);
+            if (onCancel) onCancel();
+        }
+    });
     
-    const confirmId = 'confirm_' + Date.now();
-    const cancelId = 'cancel_' + Date.now();
-    
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">❓</span>
-            <span class="notification-message">${message}</span>
-            <div class="notification-actions">
-                <button class="notification-btn notification-confirm" id="${confirmId}">Confirm</button>
-                <button class="notification-btn notification-cancel" id="${cancelId}">Cancel</button>
-            </div>
-        </div>
-    `;
+    // Override the icon for confirmation
+    const icon = notification.querySelector('.notification-icon');
+    icon.textContent = '❓';
     
     document.body.appendChild(notification);
-    
-    // Add event listeners
-    document.getElementById(confirmId).onclick = () => {
-        closeNotification(notification);
-        if (onConfirm) onConfirm();
-    };
-    
-    document.getElementById(cancelId).onclick = () => {
-        closeNotification(notification);
-        if (onCancel) onCancel();
-    };
     
     setTimeout(() => {
         notification.classList.add('show');
@@ -239,18 +331,15 @@ function showProgressNotification(message, progress = 0) {
     let notification = document.querySelector('.notification-progress');
     
     if (!notification) {
-        notification = document.createElement('div');
-        notification.className = 'notification notification-progress';
-        notification.innerHTML = `
-            <div class="notification-content">
-                <span class="notification-icon">⏳</span>
-                <span class="notification-message">${message}</span>
-                <div class="notification-progress-bar">
-                    <div class="notification-progress-fill" style="width: ${progress}%"></div>
-                </div>
-                <span class="notification-progress-text">${progress}%</span>
-            </div>
-        `;
+        notification = createNotificationElement(message, 'progress', {
+            hasProgress: true,
+            progress: progress,
+            additionalClasses: ['notification-progress']
+        });
+        
+        // Override the icon for progress
+        const icon = notification.querySelector('.notification-icon');
+        icon.textContent = '⏳';
         
         document.body.appendChild(notification);
         

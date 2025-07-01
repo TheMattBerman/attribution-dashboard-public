@@ -7,34 +7,34 @@ function downloadTemplate(type) {
     
     switch (type) {
         case 'search':
-            csvContent = 'Date,Query,Impressions,Clicks,CTR,Position\\n';
-            csvContent += '2024-06-01,your brand name,1250,125,10.0%,2.5\\n';
-            csvContent += '2024-06-02,your brand pricing,875,87,9.9%,3.2\\n';
-            csvContent += '2024-06-03,your brand review,1100,110,10.0%,2.8\\n';
+            csvContent = 'Date,Query,Impressions,Clicks,CTR,Position\n';
+            csvContent += '2024-06-01,your brand name,1250,125,10.0%,2.5\n';
+            csvContent += '2024-06-02,your brand pricing,875,87,9.9%,3.2\n';
+            csvContent += '2024-06-03,your brand review,1100,110,10.0%,2.8\n';
             filename = 'search_console_template.csv';
             break;
             
         case 'traffic':
-            csvContent = 'Date,Source,Sessions,Users,PageViews,BounceRate\\n';
-            csvContent += '2024-06-01,Direct,450,380,1250,25.5%\\n';
-            csvContent += '2024-06-02,Direct,523,445,1456,23.2%\\n';
-            csvContent += '2024-06-03,Direct,398,340,1123,28.1%\\n';
+            csvContent = 'Date,Source,Sessions,Users,PageViews,BounceRate\n';
+            csvContent += '2024-06-01,Direct,450,380,1250,25.5%\n';
+            csvContent += '2024-06-02,Direct,523,445,1456,23.2%\n';
+            csvContent += '2024-06-03,Direct,398,340,1123,28.1%\n';
             filename = 'analytics_template.csv';
             break;
             
         case 'mentions':
-            csvContent = 'Date,Platform,Content,Sentiment,Engagement,Author,URL\\n';
-            csvContent += '2024-06-01,Twitter,"Love the new features from YourBrand!",positive,15,@user123,https://twitter.com/user123/status/123\\n';
-            csvContent += '2024-06-02,Reddit,"Has anyone tried YourBrand? Looking for reviews.",neutral,8,user456,https://reddit.com/r/tools/comments/abc\\n';
-            csvContent += '2024-06-03,LinkedIn,"YourBrand helped us solve our attribution problem.",positive,23,John Doe,https://linkedin.com/posts/johndoe-123\\n';
+            csvContent = 'Date,Platform,Content,Sentiment,Engagement,Author,URL\n';
+            csvContent += '2024-06-01,Twitter,"Love the new features from YourBrand!",positive,15,@user123,https://twitter.com/user123/status/123\n';
+            csvContent += '2024-06-02,Reddit,"Has anyone tried YourBrand? Looking for reviews.",neutral,8,user456,https://reddit.com/r/tools/comments/abc\n';
+            csvContent += '2024-06-03,LinkedIn,"YourBrand helped us solve our attribution problem.",positive,23,John Doe,https://linkedin.com/posts/johndoe-123\n';
             filename = 'mentions_template.csv';
             break;
             
         case 'emails':
-            csvContent = 'Date,Subject,Type,Opens,Clicks,Replies,Source\\n';
-            csvContent += '2024-06-01,"Newsletter: Attribution Insights",newsletter,1250,125,12,campaign\\n';
-            csvContent += '2024-06-02,"Re: Your inquiry about YourBrand",inbound,1,0,1,inquiry\\n';
-            csvContent += '2024-06-03,"Follow-up: Demo feedback",followup,1,1,1,demo\\n';
+            csvContent = 'Date,Subject,Type,Opens,Clicks,Replies,Source\n';
+            csvContent += '2024-06-01,"Newsletter: Attribution Insights",newsletter,1250,125,12,campaign\n';
+            csvContent += '2024-06-02,"Re: Your inquiry about YourBrand",inbound,1,0,1,inquiry\n';
+            csvContent += '2024-06-03,"Follow-up: Demo feedback",followup,1,1,1,demo\n';
             filename = 'email_template.csv';
             break;
             
@@ -89,7 +89,7 @@ function handleTemplateUpload(type, input) {
 // Process CSV data based on type
 function processTemplateCSV(type, csvData) {
     try {
-        const lines = csvData.trim().split('\\n');
+        const lines = csvData.trim().split('\n');
         if (lines.length < 2) {
             throw new Error('CSV file must contain at least a header and one data row');
         }
@@ -350,7 +350,7 @@ function exportDataToCSV(data, filename, headers = null) {
     }
     
     // Create CSV content
-    let csvContent = headers.join(',') + '\\n';
+    let csvContent = headers.join(',') + '\n';
     
     data.forEach(row => {
         const values = headers.map(header => {
@@ -361,7 +361,7 @@ function exportDataToCSV(data, filename, headers = null) {
             }
             return value;
         });
-        csvContent += values.join(',') + '\\n';
+        csvContent += values.join(',') + '\n';
     });
     
     // Download file

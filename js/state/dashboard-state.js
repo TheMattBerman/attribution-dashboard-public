@@ -177,6 +177,7 @@ const dashboardState = {
     apiKeys: {
         googleSearchConsole: '',
         googleAnalytics: '',
+        googleAnalyticsGA4: '',
         scrapeCreators: '',
         exaSearch: '',
         emailMarketing: '',
@@ -185,6 +186,7 @@ const dashboardState = {
     apiStatus: {
         googleSearchConsole: 'disconnected',
         googleAnalytics: 'disconnected',
+        googleAnalyticsGA4: 'disconnected',
         scrapeCreators: 'disconnected',
         exaSearch: 'disconnected',
         emailMarketing: 'disconnected',
