@@ -671,6 +671,34 @@ function setupErrorHandling() {
     });
 }
 
+// Create empty state element with title, description, and optional action button
+function createEmptyStateElement(title, description, buttonText = null, buttonCallback = null) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'empty-state-title';
+    titleEl.textContent = title;
+    
+    const descEl = document.createElement('p');
+    descEl.className = 'empty-state-description';
+    descEl.textContent = description;
+    
+    emptyState.appendChild(titleEl);
+    emptyState.appendChild(descEl);
+    
+    // Add action button if provided
+    if (buttonText && buttonCallback) {
+        const buttonEl = document.createElement('button');
+        buttonEl.className = 'empty-state-button btn btn-primary';
+        buttonEl.textContent = buttonText;
+        buttonEl.onclick = buttonCallback;
+        emptyState.appendChild(buttonEl);
+    }
+    
+    return emptyState;
+}
+
 function checkForEmptyStates() {
     checkEchoesEmptyState();
     checkCampaignsEmptyState();

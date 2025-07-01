@@ -1,31 +1,77 @@
 // Missing Functions Component - Functions needed for button functionality
 
 // Data Management Functions
-function refreshData() {
+async function refreshData() {
     if (typeof showNotification === 'function') {
         showNotification('Refreshing all data...', 'info');
     }
     
-    // Refresh signal displays
-    if (typeof updateSignalDisplays === 'function') {
-        updateSignalDisplays();
+    try {
+        // Check API connectivity first
+        const apiStatus = await checkAPIConnectivity();
+        
+        // Refresh signal data from API
+        if (typeof refreshSignalData === 'function') {
+            await refreshSignalData();
+        }
+        
+        // Refresh live feed
+        if (typeof refreshFeed === 'function') {
+            await refreshFeed();
+        }
+        
+        // Refresh chart
+        if (typeof refreshChart === 'function') {
+            refreshChart();
+        }
+        
+        if (typeof showNotification === 'function') {
+            if (apiStatus.hasWorkingAPIs) {
+                showNotification('All data refreshed successfully with fresh API data', 'success');
+            } else {
+                showNotification('Data refreshed with available sources. Some APIs not configured.', 'info');
+            }
+        }
+    } catch (error) {
+        console.error('Error refreshing data:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Some data refresh operations failed. Check API configuration.', 'warning');
+        }
+        
+        // Fallback to updating displays with current state
+        if (typeof updateSignalDisplays === 'function') {
+            updateSignalDisplays();
+        }
+    }
+}
+
+// Check API connectivity and return status
+async function checkAPIConnectivity() {
+    try {
+        const response = await fetch('/api/get-stored-keys', {
+            credentials: 'include'
+        });
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            const hasWorkingAPIs = result.env_keys.scrape_creators || result.env_keys.exa_search || result.stored_services.length > 0;
+            return {
+                hasWorkingAPIs,
+                envKeys: result.env_keys,
+                storedServices: result.stored_services,
+                brandName: result.brand_name
+            };
+        }
+    } catch (error) {
+        console.error('Error checking API connectivity:', error);
     }
     
-    // Refresh live feed
-    if (typeof refreshFeed === 'function') {
-        refreshFeed();
-    }
-    
-    // Refresh chart
-    if (typeof refreshChart === 'function') {
-        refreshChart();
-    }
-    
-    if (typeof showNotification === 'function') {
-        setTimeout(() => {
-            showNotification('Data refreshed successfully', 'success');
-        }, 1000);
-    }
+    return {
+        hasWorkingAPIs: false,
+        envKeys: {},
+        storedServices: [],
+        brandName: 'Unknown'
+    };
 }
 
 function exportData(dataType) {

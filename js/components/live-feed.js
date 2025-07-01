@@ -7,10 +7,19 @@ let liveFeedInterval = null;
 async function initializeLiveFeed() {
     // Try to load real data first, fallback to sample data
     try {
+        if (typeof showNotification === 'function') {
+            showNotification('Loading live feed data...', 'info');
+        }
+        
         await refreshFeedWithRealData();
         console.log('Live feed initialized with real data');
     } catch (error) {
-        console.log('Loading sample data for live feed');
+        console.log('Loading sample data for live feed:', error);
+        
+        if (typeof showNotification === 'function') {
+            showNotification('Unable to load live data, showing sample data. Check API configuration.', 'warning');
+        }
+        
         // Generate initial sample mentions as fallback
         dashboardState.liveFeed.mentions = generateSampleMentions();
         
@@ -305,17 +314,65 @@ async function refreshFeed() {
     }
     
     try {
-        // Try to fetch real data
-        await refreshFeedWithRealData();
+        const daysBack = (typeof currentTimeframe !== 'undefined' && currentTimeframe === '7d') ? 7 : 30;
         
-        dashboardState.liveFeed.lastUpdate = new Date();
-        const lastUpdateElement = document.getElementById('lastUpdate');
-        if (lastUpdateElement) {
-            lastUpdateElement.textContent = 'Just now';
-        }
+        // Force refresh from APIs
+        const response = await fetch('/api/refresh-mentions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                days_back: daysBack,
+                platform: 'all'
+            })
+        });
         
-        if (typeof showNotification === 'function') {
-            showNotification('Feed refreshed with real data', 'success');
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            const mentions = result.data;
+            console.log(`Refresh API returned ${mentions.length} mentions for live feed`);
+            
+            // Clear existing mentions
+            dashboardState.liveFeed.mentions = [];
+            
+            // Convert API data to dashboard format
+            mentions.forEach(mention => {
+                dashboardState.liveFeed.mentions.push({
+                    id: mention.id || Date.now() + Math.random(),
+                    timestamp: mention.timestamp || mention.created_at || new Date().toISOString(),
+                    type: mention.platform === 'web' ? 'Web Mention' : 'Social Mention',
+                    content: mention.content || mention.text || 'No content available',
+                    platform: mention.platform || 'unknown',
+                    author: mention.author || 'Anonymous',
+                    engagement: mention.engagement || 0,
+                    sentiment: mention.sentiment || 'neutral',
+                    sentiment_details: mention.sentiment_details || {},
+                    url: mention.url || '#',
+                    source: 'api'
+                });
+            });
+            
+            // Sort by timestamp (newest first)
+            dashboardState.liveFeed.mentions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            // Update display
+            populateLiveFeed();
+            updateFeedStats();
+            
+            dashboardState.liveFeed.lastUpdate = new Date();
+            const lastUpdateElement = document.getElementById('lastUpdate');
+            if (lastUpdateElement) {
+                lastUpdateElement.textContent = 'Just now';
+            }
+            
+            if (typeof showNotification === 'function') {
+                showNotification(`Feed refreshed with ${mentions.length} fresh mentions from APIs`, 'success');
+            }
+        } else {
+            throw new Error(result.message || 'Failed to refresh mentions');
         }
     } catch (error) {
         console.error('Failed to refresh with real data, using sample data:', error);
@@ -335,8 +392,14 @@ async function refreshFeed() {
         populateLiveFeed();
         updateFeedStats();
         
+        dashboardState.liveFeed.lastUpdate = new Date();
+        const lastUpdateElement = document.getElementById('lastUpdate');
+        if (lastUpdateElement) {
+            lastUpdateElement.textContent = 'Just now';
+        }
+        
         if (typeof showNotification === 'function') {
-            showNotification('Feed refreshed with sample data', 'info');
+            showNotification('API refresh failed, showing sample data. Check your API keys in settings.', 'warning');
         }
     }
     
@@ -410,14 +473,39 @@ function exportFeed() {
 async function refreshFeedWithRealData() {
     try {
         const daysBack = (typeof currentTimeframe !== 'undefined' && currentTimeframe === '7d') ? 7 : 30;
-        const response = await fetch(`/api/fetch-mentions?days_back=${daysBack}&platform=all`, {
+        
+        // First, try to get cached data
+        let response = await fetch(`/api/fetch-mentions?days_back=${daysBack}&platform=all`, {
             credentials: 'include'
         });
-        const result = await response.json();
+        let result = await response.json();
+        
+        // If no cached data or force refresh, call refresh endpoint
+        if (result.status === 'success' && result.data.length === 0 && result.source === 'empty') {
+            console.log('No cached data found, fetching fresh data from APIs...');
+            
+            if (typeof showNotification === 'function') {
+                showNotification('Fetching fresh data from social media APIs...', 'info');
+            }
+            
+            // Call refresh endpoint to get fresh data
+            response = await fetch('/api/refresh-mentions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    days_back: daysBack,
+                    platform: 'all'
+                })
+            });
+            result = await response.json();
+        }
         
         if (result.status === 'success') {
             const mentions = result.data;
-            console.log(`API returned ${mentions.length} mentions for live feed`);
+            console.log(`API returned ${mentions.length} mentions for live feed (source: ${result.source || 'unknown'})`);
             
             // Clear existing mentions
             dashboardState.liveFeed.mentions = [];
@@ -426,7 +514,7 @@ async function refreshFeedWithRealData() {
             mentions.forEach(mention => {
                 dashboardState.liveFeed.mentions.push({
                     id: mention.id || Date.now() + Math.random(),
-                    timestamp: mention.timestamp || new Date().toISOString(),
+                    timestamp: mention.timestamp || mention.created_at || new Date().toISOString(),
                     type: mention.platform === 'web' ? 'Web Mention' : 'Social Mention',
                     content: mention.content || mention.text || 'No content available',
                     platform: mention.platform || 'unknown',
@@ -448,6 +536,15 @@ async function refreshFeedWithRealData() {
             
             if (typeof saveToLocalStorage === 'function') {
                 saveToLocalStorage();
+            }
+            
+            // Show success notification with source info
+            if (typeof showNotification === 'function') {
+                if (result.source === 'live_api') {
+                    showNotification(`Loaded ${mentions.length} fresh mentions from APIs`, 'success');
+                } else if (result.source === 'cache') {
+                    showNotification(`Loaded ${mentions.length} cached mentions`, 'info');
+                }
             }
         } else {
             throw new Error(result.message || 'Failed to fetch mentions');
