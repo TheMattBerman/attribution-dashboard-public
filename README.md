@@ -18,8 +18,8 @@ A comprehensive social media monitoring and attribution tracking dashboard that 
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/yourusername/attribution-dashboard.git
-   cd attribution-dashboard
+   git clone https://github.com/yourusername/attribution-dashboard-public.git
+   cd attribution-dashboard-public
    ```
 
 2. **Install dependencies**
@@ -38,7 +38,7 @@ A comprehensive social media monitoring and attribution tracking dashboard that 
 4. **Start the dashboard**
 
    ```bash
-   python start_dashboard.py
+   python backend_server.py
    ```
 
 5. **Open your browser** to `http://localhost:8080`
@@ -60,8 +60,8 @@ At minimum, you'll need:
 
 ## Documentation
 
+- **[Quick Start Guide](QUICK_START.md)** - Get up and running in 30 seconds
 - [Setup Guide](SETUP_GUIDE.md) - Detailed setup instructions
-- [Quick Start](QUICK_START.md) - Get up and running quickly
 - [API Configuration](API_FIXES_SUMMARY.md) - API setup details
 - [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
 
