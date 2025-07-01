@@ -424,7 +424,7 @@ function sanitizeData(data) {
         return sanitized;
     } else if (typeof data === 'string') {
         // Remove potential XSS vectors
-        return data.replace(/<script[^>]*>.*?<\\/script>/gi, '').trim();
+        return data.replace(/<script[^>]*>.*?<\/script>/gi, '').trim();
     }
     return data;
 }

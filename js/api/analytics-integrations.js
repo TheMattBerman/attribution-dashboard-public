@@ -2,7 +2,9 @@
 
 // Test Google Search Console connection
 async function testGSCConnection() {
-    const apiKey = document.getElementById('gscApiKey')?.value;
+    // Try both setup wizard and integrations section
+    const apiKey = document.getElementById('gscApiKey')?.value || 
+                   document.getElementById('gscApiKeyIntegrations')?.value;
     
     if (!apiKey) {
         if (typeof updateConnectionStatus === 'function') {
@@ -404,7 +406,7 @@ async function testAllAnalyticsConnections() {
     const promises = [];
     
     // Test Google Search Console if API key is available
-    if (document.getElementById('gscApiKey')?.value) {
+    if (document.getElementById('gscApiKey')?.value || document.getElementById('gscApiKeyIntegrations')?.value) {
         promises.push(testGSCConnection());
     }
     
