@@ -602,9 +602,48 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
                                 <label class="form-label">Source</label>
                                 <input type="text" class="form-control" id="echoSource" placeholder="e.g., Twitter, Slack, Email">
                             </div>
+                            <input type="hidden" id="echoIndex" value="">
                             <div class="form-group flex gap-8">
                                 <button type="button" class="btn btn--outline" onclick="closeModal('addEchoModal')">Cancel</button>
                                 <button type="submit" class="btn btn--primary">Add Echo</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Add Campaign Modal -->
+                <div id="campaignModal" class="modal">
+                    <div class="modal-content">
+                        <h3>Add Campaign</h3>
+                        <form id="campaignForm">
+                            <div class="form-group">
+                                <label class="form-label">Campaign Name</label>
+                                <input type="text" class="form-control" id="campaignName" placeholder="Enter campaign name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Search Delta</label>
+                                <input type="text" class="form-control" id="campaignDelta" placeholder="e.g., +23%">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Mentions</label>
+                                <input type="number" class="form-control" id="campaignMentions" placeholder="Enter mention count">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sign-ups</label>
+                                <input type="number" class="form-control" id="campaignSignups" placeholder="Enter sign-up count">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Community Buzz</label>
+                                <input type="text" class="form-control" id="campaignBuzz" placeholder="e.g., High, Medium, Low">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-control" id="campaignNotes" rows="3" placeholder="Add campaign notes..."></textarea>
+                            </div>
+                            <input type="hidden" id="campaignIndex" value="">
+                            <div class="form-group flex gap-8">
+                                <button type="button" class="btn btn--outline" onclick="closeModal('campaignModal')">Cancel</button>
+                                <button type="submit" class="btn btn--primary">Add Campaign</button>
                             </div>
                         </form>
                     </div>
@@ -617,10 +656,11 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
                 <div class="section-header">
                     <h2>Live Mentions Feed</h2>
                     <div class="section-actions">
-                        <button class="btn btn--secondary" onclick="refreshFeed()">Refresh Feed</button>
-                <button class="btn btn--primary" onclick="fetchFreshData()">Fetch Fresh Data</button>
-                <button class="btn btn--tertiary" onclick="checkCacheStatus()">Cache Status</button>
-                        <button class="btn btn--outline" onclick="exportFeed()">Export Mentions</button>
+                        <button class="btn btn--secondary" onclick="refreshFeed()">🔄 Refresh Feed</button>
+                        <button class="btn btn--primary" onclick="fetchFreshData()">⚡ Fetch Fresh Data</button>
+                        <button class="btn btn--tertiary" onclick="checkCacheStatus()">📁 Cache Status</button>
+                        <button class="btn btn--info" onclick="diagnoseLiveFeed()" title="Run diagnostic check">🔍 Diagnose</button>
+                        <button class="btn btn--outline" onclick="exportFeed()">📤 Export</button>
                     </div>
                 </div>
 
@@ -682,7 +722,7 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
                         <span>Live feed active - Last update: <span id="lastUpdate">Just now</span></span>
                     </div>
                     <div class="feed-actions">
-                        <button class="btn btn--outline btn--sm" onclick="toggleFeed()">Pause Feed</button>
+                        <button class="btn btn--outline btn--sm" onclick="toggleFeed(event)">Pause Feed</button>
                         <button class="btn btn--secondary btn--sm" onclick="loadMoreMentions()">Load More</button>
                     </div>
                 </div>
@@ -808,7 +848,7 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
                         <h4>Google Search Console</h4>
                         <div class="form-group">
                             <label class="form-label">API Key</label>
-                            <input type="password" class="form-control" id="gscApiKey" placeholder="Enter your GSC API key">
+                            <input type="password" class="form-control" id="gscApiKeyIntegrations" placeholder="Enter your GSC API key">
                         </div>
                         <div class="integration-status">
                             <span class="status status--warning" id="gscStatus">Not Connected</span>
@@ -897,13 +937,13 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
 
                 <div class="prompts-grid">
                     <div class="prompt-categories">
-                        <button class="category-btn active" data-category="all" onclick="filterPrompts('all')">All Prompts</button>
-                        <button class="category-btn" data-category="Survey Questions" onclick="filterPrompts('Survey Questions')">Survey Questions</button>
-                        <button class="category-btn" data-category="Email Signatures" onclick="filterPrompts('Email Signatures')">Email Signatures</button>
-                        <button class="category-btn" data-category="Follow-up Messages" onclick="filterPrompts('Follow-up Messages')">Follow-up Messages</button>
-                        <button class="category-btn" data-category="Social Media Posts" onclick="filterPrompts('Social Media Posts')">Social Media</button>
-                        <button class="category-btn" data-category="Landing Pages" onclick="filterPrompts('Landing Pages')">Landing Pages</button>
-                        <button class="category-btn" data-category="Feedback Forms" onclick="filterPrompts('Feedback Forms')">Feedback Forms</button>
+                                                        <button class="category-btn active" data-category="all" onclick="filterPrompts('all', event)">All Prompts</button>
+                                <button class="category-btn" data-category="Survey Questions" onclick="filterPrompts('Survey Questions', event)">Survey Questions</button>
+                                <button class="category-btn" data-category="Email Signatures" onclick="filterPrompts('Email Signatures', event)">Email Signatures</button>
+                                <button class="category-btn" data-category="Follow-up Messages" onclick="filterPrompts('Follow-up Messages', event)">Follow-up Messages</button>
+                                <button class="category-btn" data-category="Social Media Posts" onclick="filterPrompts('Social Media Posts', event)">Social Media</button>
+                                <button class="category-btn" data-category="Landing Pages" onclick="filterPrompts('Landing Pages', event)">Landing Pages</button>
+                                <button class="category-btn" data-category="Feedback Forms" onclick="filterPrompts('Feedback Forms', event)">Feedback Forms</button>
                     </div>
 
                     <div class="prompts-list" id="promptsList">
@@ -917,6 +957,34 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
     <!-- Notification System -->
     <div id="notifications" class="notifications"></div>
 
+    <!-- Modular JavaScript Components -->
+    <!-- Load in dependency order: state management first, utilities, then components, API, and main app last -->
+    
+    <!-- State Management -->
+    <script src="js/state/dashboard-state.js"></script>
+    <script src="js/state/storage-manager.js"></script>
+    
+    <!-- Utilities (no dependencies) -->
+    <script src="js/utils/notification-system.js"></script>
+    <script src="js/utils/date-utils.js"></script>
+    <script src="js/utils/data-processors.js"></script>
+    <script src="js/utils/export-utils.js"></script>
+    
+    <!-- API Layer -->
+    <script src="js/api/api-client.js"></script>
+    <script src="js/api/analytics-integrations.js"></script>
+    <script src="js/api/social-integrations.js"></script>
+    
+    <!-- UI Components (depend on state and utilities) -->
+    <script src="js/components/setup-wizard.js"></script>
+    <script src="js/components/signal-widgets.js"></script>
+    <script src="js/components/live-feed.js"></script>
+    <script src="js/components/missing-functions.js"></script>
+    
+    <!-- Diagnostic Tools -->
+    <script src="js/utils/live-feed-diagnostic.js"></script>
+    
+    <!-- Main Application (depends on all modules) -->
     <script src="app.js"></script>
 </body>
 </html>

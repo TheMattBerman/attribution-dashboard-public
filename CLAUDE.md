@@ -36,15 +36,14 @@ python3 start_dashboard.py
 
 # Or directly start the backend server
 python3 backend_server.py
+
+# Access the dashboard at http://localhost:8080
 ```
 
 ### Testing
 ```bash
-# Test individual API integrations
-python3 test_api_keys.py      # Test all configured API keys
-python3 test_youtube_api.py   # Test YouTube API specifically
-python3 test_reddit_api.py    # Test Reddit API specifically
-python3 test_tiktok_api.py    # Test TikTok API specifically
+# Test the complete setup and API integrations
+python3 example_usage.py      # Example usage and integration testing
 ```
 
 ### Dependencies
@@ -74,15 +73,28 @@ The frontend uses a centralized state object (`dashboardState` in app.js:2) cont
 ### API Integration Pattern
 Each integration follows a consistent pattern:
 1. Environment variable configuration in `.env`
-2. Python class in dedicated integration file
-3. Initialization in `backend_server.py:66-94`
-4. API endpoint exposure through Flask routes
+2. Python class in dedicated integration file (`*_integration.py`)
+3. Conditional initialization in `backend_server.py:84-110` with graceful fallbacks
+4. API endpoint exposure through Flask routes at `/api/*`
+
+### Available Integrations
+- **ScrapeCreators**: Social media monitoring (TikTok, YouTube, Reddit)
+- **Exa Search**: Web-wide mention tracking and search
+- **Google Analytics**: GA4 integration for traffic data (optional dependency)
+- **OpenRouter Sentiment**: AI-powered sentiment analysis (optional dependency)
 
 ### Data Flow
 1. Frontend makes requests to Flask backend at `/api/*` endpoints
 2. Backend integrations fetch data from external APIs
-3. Data cached in `data_cache/` directory
+3. Data cached in `data_cache/` directory with JSON files
 4. Results returned to frontend and stored in localStorage
+5. Graceful degradation when APIs are unavailable or misconfigured
+
+### Error Handling
+- All integrations have conditional initialization with try/catch blocks
+- Missing optional dependencies log warnings but don't break the application
+- API failures are logged and return empty/fallback data
+- Frontend operates in demo mode when backend APIs are unavailable
 
 ## File Structure Highlights
 
