@@ -917,6 +917,30 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
     <!-- Notification System -->
     <div id="notifications" class="notifications"></div>
 
+    <!-- Modular JavaScript Components -->
+    <!-- Load in dependency order: state management first, utilities, then components, API, and main app last -->
+    
+    <!-- State Management -->
+    <script src="js/state/dashboard-state.js"></script>
+    <script src="js/state/storage-manager.js"></script>
+    
+    <!-- Utilities (no dependencies) -->
+    <script src="js/utils/notification-system.js"></script>
+    <script src="js/utils/date-utils.js"></script>
+    <script src="js/utils/data-processors.js"></script>
+    <script src="js/utils/export-utils.js"></script>
+    
+    <!-- API Layer -->
+    <script src="js/api/api-client.js"></script>
+    <script src="js/api/analytics-integrations.js"></script>
+    <script src="js/api/social-integrations.js"></script>
+    
+    <!-- UI Components (depend on state and utilities) -->
+    <script src="js/components/setup-wizard.js"></script>
+    <script src="js/components/signal-widgets.js"></script>
+    <script src="js/components/live-feed.js"></script>
+    
+    <!-- Main Application (depends on all modules) -->
     <script src="app.js"></script>
 </body>
 </html>
