@@ -1,283 +1,92 @@
-# Attribution Dashboard 🚀
+# Attribution Dashboard
 
-A modular, founder-ready marketing dashboard designed for attributionless impact tracking in the era of AI, answer engines, and "dark" social.
+A comprehensive social media monitoring and attribution tracking dashboard that helps you understand where your brand mentions are coming from across the internet.
 
-![Dashboard Preview](mentions_chart.png)
+## Features
 
-## ✨ Features
+- **Multi-Platform Monitoring**: Track mentions across TikTok, YouTube, Reddit, and the wider web
+- **AI-Powered Sentiment Analysis**: Analyze sentiment of mentions using advanced AI models
+- **Real-Time Analytics**: View your brand's performance metrics in real-time
+- **Google Integration**: Connect Google Search Console and GA4 for branded search tracking
+- **Beautiful Dashboard**: Modern, responsive UI with dark mode and real-time updates
+- **Caching System**: Efficient data caching to minimize API calls
 
-### 🎯 Core Tracking Panels
+## Quick Start
 
-- **Signals Tracking**: Real-time widgets for branded search volume, direct traffic, inbound mentions, and form fills
-- **Real-Time Mentions Graph**: Interactive 7/30-day chart with Chart.js visualization
-- **Echoes Log**: Manual logging system for organic mentions and campaign responses
-- **Campaign Scorecard**: Comprehensive campaign performance tracking with metrics
-- **API Integrations**: Google Search Console, webhooks, and CSV data sources
-- **Social Monitoring**: Ready-to-go scripts for X, Reddit, Discord mentions via ScrapeCreators & Exa APIs
+1. **Clone the repository**
 
-### 🎨 UI/UX Features
+   ```bash
+   git clone https://github.com/yourusername/attribution-dashboard.git
+   cd attribution-dashboard
+   ```
 
-- **Color-Coded Interface**: Blue (API-tracked), Yellow (Manual), Green (Positive velocity)
-- **Responsive Design**: Works perfectly on desktop, tablet, and mobile
-- **Dark/Light Mode**: Automatic theme switching based on system preference
-- **One-Click Export**: CSV export for all data sections
-- **Data Persistence**: Automatic localStorage backup of all your data
+2. **Install dependencies**
 
-### 🔧 Automation Ready
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-- **CSV Upload**: Support for mentions, signals, and campaign data formats
-- **API Integration Panel**: Easy setup for Google Search Console and custom webhooks
-- **Social Scripts**: Download ready-to-use Python scripts for automated mention tracking
-- **Data Refresh**: One-click refresh from all connected sources
+3. **Configure your environment**
 
-## 🚀 Quick Start (< 10 Minutes)
+   ```bash
+   cp config.env.example .env
+   # Edit .env with your API keys
+   ```
 
-### 1. Download & Setup
+4. **Start the dashboard**
 
-```bash
-# Clone or download the repository
-git clone https://github.com/your-repo/attribution-dashboard.git
-cd attribution-dashboard
+   ```bash
+   python start_dashboard.py
+   ```
 
-# Open in your browser
-open index.html
-```
+5. **Open your browser** to `http://localhost:8080`
 
-### 2. Initial Setup
+## Required API Keys
 
-1. **Welcome Modal**: Click "Get Started" to dismiss the welcome screen
-2. **Add Your First Data**:
-   - Navigate to "Signals Tracking"
-   - Update metrics manually or upload CSV data
-3. **Create Campaigns**:
-   - Go to "Campaign Scorecard"
-   - Click "Add Campaign" to start tracking
+At minimum, you'll need:
 
-### 3. Data Import Options
+- **BRAND_NAME**: Your brand name to monitor
+- **SCRAPE_CREATORS_API_KEY**: For social media monitoring ([Get key](https://scrapecreators.com/))
+- **EXA_API_KEY**: For web-wide mention tracking ([Get key](https://exa.ai/))
 
-#### CSV Upload Formats:
+## Optional Enhancements
 
-**Mentions Data:**
+- **OpenRouter API**: For AI-powered sentiment analysis ([Get key](https://openrouter.ai/))
+- **Google APIs**: For branded search and direct traffic tracking
+- **Email Marketing APIs**: Connect Mailchimp, ConvertKit, or Klaviyo
+- **CRM Integration**: Connect HubSpot, Pipedrive, or Calendly
 
-```csv
-date,mentions
-2024-01-01,45
-2024-01-02,67
-2024-01-03,52
-```
+## Documentation
 
-**Signals Data:**
+- [Setup Guide](SETUP_GUIDE.md) - Detailed setup instructions
+- [Quick Start](QUICK_START.md) - Get up and running quickly
+- [API Configuration](API_FIXES_SUMMARY.md) - API setup details
+- [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
 
-```csv
-metric,value
-branded search,2847
-direct traffic,1234
-inbound mentions,89
-form fills,23
-```
+## Architecture
 
-**Campaign Data:**
+The dashboard consists of:
 
-```csv
-campaign,mentions,signups
-Q1 Content Push,156,89
-Podcast Tour,278,134
-```
+- **Backend**: Python Flask server with API integrations
+- **Frontend**: Vanilla JavaScript with real-time updates
+- **Caching**: Local file-based caching system
+- **APIs**: Modular integration system for various data sources
 
-## 📊 Dashboard Sections
+## Contributing
 
-### Signals Tracking Panel
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Track your core marketing signals with both automatic and manual input options:
+## License
 
-- **Branded Search Volume** (API-tracked)
-- **Direct Traffic** (API-tracked)
-- **Inbound Mentions** (Manual logging)
-- **Form Fills** (Manual logging)
+This project is open source and available under the [MIT License](LICENSE).
 
-### Real-Time Mentions Graph
+## Support
 
-Interactive chart showing brand mention trends:
+For questions or issues, please open a GitHub issue or reach out to the community.
 
-- Toggle between 7-day and 30-day views
-- Hover tooltips with detailed data
-- Export chart data to CSV
-- Custom data import support
+## Built By
 
-### Echoes Log
+Created with 🔥 by [Matt Berman](https://bigplayers.co) – CEO of [Emerald Digital](https://emerald.digital) and creator of the _Big Players_ newsletter.  
+Follow me on [X/Twitter](https://twitter.com/themattberman) for marketing, AI, and growth systems.
 
-Manual tracking system for organic activity:
-
-- **Unsolicited Mentions**: Customer references in communities
-- **Campaign Responses**: Direct responses to marketing efforts
-- **New Activity**: Unexpected sources of brand awareness
-- Search and filter functionality
-
-### Campaign Scorecard
-
-Comprehensive campaign performance tracking:
-
-- Campaign name and notes
-- Branded search delta percentage
-- Total mentions count
-- Sign-ups/conversions
-- Community buzz indicator
-- Edit/delete campaign functionality
-
-## 🔌 API Integrations
-
-### Google Search Console
-
-1. Go to "API Integrations" panel
-2. Enter your GSC API key
-3. Click "Test Connection"
-4. Automatic data refresh every hour
-
-### Custom Webhooks
-
-1. Add webhook URL in integrations panel
-2. Set authentication token
-3. Configure data mapping
-4. Test webhook connection
-
-### CSV/Google Sheets
-
-- Drag & drop CSV files for instant import
-- Google Sheets integration for automatic updates
-- Multiple data format support
-
-## 🤖 Social Monitoring Scripts
-
-### ScrapeCreators Integration
-
-Download and run the Python script for automated social monitoring:
-
-```python
-# Automatically pulls mentions from:
-# - X (Twitter)
-# - Reddit
-# - Discord
-# - Other social platforms
-
-python scrape_creators_integration.py
-```
-
-### Exa Search Integration
-
-Web-wide mention tracking via search API:
-
-```python
-# Searches the open web for brand mentions
-# - News articles
-# - Blog posts
-# - Forum discussions
-# - Review sites
-
-python exa_search_integration.py
-```
-
-## 📋 Prompts & Worksheets
-
-### Built-in Prompt Library
-
-Ready-to-use attribution tracking prompts:
-
-- **Survey Questions**: "How did you hear about us?"
-- **Email Signatures**: Attribution request templates
-- **Follow-up Messages**: Post-demo survey prompts
-
-### Weekly Worksheet
-
-Download and print weekly tracking worksheet for manual echo logging:
-
-- Daily monitoring checklist
-- Source categorization
-- Weekly summary template
-
-## 💾 Data Management
-
-### Automatic Backup
-
-- All data automatically saved to browser localStorage
-- No data loss between sessions
-- Import/export functionality for data portability
-
-### Export Options
-
-- **JSON Export**: Full data backup for all sections
-- **CSV Export**: Chart data, campaigns, signals, echoes
-- **Notion Integration**: Copy-paste ready formats
-
-## 🎯 Use Cases
-
-### For Founders
-
-- Track organic growth and word-of-mouth spread
-- Monitor campaign effectiveness without cookies
-- Identify which marketing activities drive real impact
-
-### For Marketers
-
-- Attribution tracking in privacy-first world
-- Community buzz and sentiment monitoring
-- Campaign ROI measurement beyond traditional metrics
-
-### For Growth Teams
-
-- Social listening and mention tracking
-- Direct traffic and branded search analysis
-- User acquisition source identification
-
-## 🔧 Customization
-
-### Adding New Metrics
-
-1. Update `dashboardState.signals` in `app.js`
-2. Add new widget HTML in `index.html`
-3. Update CSS classes for styling
-4. Add export functionality
-
-### Custom Integrations
-
-1. Add API credentials in settings
-2. Create data fetch functions
-3. Map data to dashboard format
-4. Set up automatic refresh
-
-## 📱 Browser Support
-
-- **Chrome/Edge**: Full support with all features
-- **Firefox**: Full support with all features
-- **Safari**: Full support with all features
-- **Mobile**: Responsive design works on all devices
-
-## 🚨 Privacy & Security
-
-- **No Server Required**: Runs entirely in browser
-- **Local Data Storage**: All data stays on your device
-- **API Key Security**: Keys stored locally, never transmitted
-- **GDPR Compliant**: No tracking, no cookies, no external data collection
-
-## 🤝 Contributing
-
-This dashboard is designed to be easily customizable for your specific needs:
-
-1. Fork the repository
-2. Add your custom features
-3. Share improvements with the community
-4. Create integrations for your favorite tools
-
-## 📄 License
-
-MIT License - feel free to use this for your business and modify as needed.
-
-## 🆘 Support
-
-- **Setup Issues**: Check browser console for errors
-- **Data Problems**: Verify CSV format matches examples
-- **API Integrations**: Test connections in integrations panel
-- **Custom Features**: Modify the code to fit your needs
-
----
-
-**Built for founders, by founders.** Track what matters in the age of attributionless marketing. 🚀
+Want more tools like this? → [BigPlayers.co](https://bigplayers.co)
