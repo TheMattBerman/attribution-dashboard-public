@@ -165,7 +165,8 @@ function checkCacheStatus() {
     // Simulate cache check
     setTimeout(() => {
         const cacheInfo = {
-            lastUpdate: dashboardState.liveFeed.lastUpdate || new Date(),
+            lastUpdate: dashboardState.liveFeed.lastUpdate instanceof Date ? 
+                       dashboardState.liveFeed.lastUpdate : new Date(dashboardState.liveFeed.lastUpdate || Date.now()),
             mentionsCount: dashboardState.liveFeed.mentions?.length || 0,
             apiStatus: 'Online'
         };

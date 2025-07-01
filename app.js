@@ -289,7 +289,9 @@ function addCampaign() {
 function addEchoEntry() {
     document.getElementById('addEchoModal').style.display = 'block';
     document.getElementById('echoForm').reset();
-    document.getElementById('echoIndex').value = '';
+    if (document.getElementById('echoIndex')) {
+        document.getElementById('echoIndex').value = '';
+    }
 }
 
 function editCampaign(index) {
@@ -314,7 +316,9 @@ function editEcho(index) {
     document.getElementById('echoType').value = echo.type;
     document.getElementById('echoContent').value = echo.content;
     document.getElementById('echoSource').value = echo.source;
-    document.getElementById('echoIndex').value = index;
+    if (document.getElementById('echoIndex')) {
+        document.getElementById('echoIndex').value = index;
+    }
     
     document.getElementById('addEchoModal').style.display = 'block';
 }
@@ -349,14 +353,13 @@ function deleteEcho(index) {
 function handleCampaignFormSubmit(event) {
     event.preventDefault();
     
-    const formData = new FormData(event.target);
     const campaign = {
-        name: formData.get('name'),
-        brandedSearchDelta: formData.get('delta'),
-        mentions: parseInt(formData.get('mentions')) || 0,
-        signups: parseInt(formData.get('signups')) || 0,
-        communityBuzz: formData.get('buzz'),
-        notes: formData.get('notes')
+        name: document.getElementById('campaignName').value,
+        brandedSearchDelta: document.getElementById('campaignDelta').value,
+        mentions: parseInt(document.getElementById('campaignMentions').value) || 0,
+        signups: parseInt(document.getElementById('campaignSignups').value) || 0,
+        communityBuzz: document.getElementById('campaignBuzz').value,
+        notes: document.getElementById('campaignNotes').value
     };
     
     const index = document.getElementById('campaignIndex').value;
@@ -383,16 +386,15 @@ function handleCampaignFormSubmit(event) {
 function handleEchoFormSubmit(event) {
     event.preventDefault();
     
-    const formData = new FormData(event.target);
     const echo = {
         id: Date.now(),
         timestamp: new Date().toLocaleString(),
-        type: formData.get('type'),
-        content: formData.get('content'),
-        source: formData.get('source')
+        type: document.getElementById('echoType').value,
+        content: document.getElementById('echoContent').value,
+        source: document.getElementById('echoSource').value
     };
     
-    const index = document.getElementById('echoIndex').value;
+    const index = document.getElementById('echoIndex') ? document.getElementById('echoIndex').value : '';
     
     if (index === '') {
         // Adding new echo
