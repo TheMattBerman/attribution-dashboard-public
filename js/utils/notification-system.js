@@ -2,12 +2,6 @@
 
 // Show notification toast
 function showNotification(message, type = 'info') {
-    // Remove any existing notifications
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-    
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -18,6 +12,11 @@ function showNotification(message, type = 'info') {
             <button class="notification-close" onclick="closeNotification(this)">&times;</button>
         </div>
     `;
+    
+    // Position notification (stack multiple notifications)
+    const existingNotifications = document.querySelectorAll('.notification');
+    const topOffset = 20 + (existingNotifications.length * 80);
+    notification.style.top = `${topOffset}px`;
     
     // Add to page
     document.body.appendChild(notification);
@@ -63,12 +62,24 @@ function closeNotification(element) {
     const notification = element.classList ? element : element.closest('.notification');
     if (notification) {
         notification.classList.remove('show');
+        notification.style.transform = 'translateX(100%)';
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
+                // Reposition remaining notifications
+                repositionNotifications();
             }
         }, 300);
     }
+}
+
+// Reposition notifications after one is removed
+function repositionNotifications() {
+    const notifications = document.querySelectorAll('.notification');
+    notifications.forEach((notification, index) => {
+        const topOffset = 20 + (index * 80);
+        notification.style.top = `${topOffset}px`;
+    });
 }
 
 // Show loading notification
@@ -274,153 +285,67 @@ function initializeNotificationSystem() {
         return;
     }
     
+    // Minimal fallback styles - main styles are in style.css
     const styles = `
         <style id="notification-styles">
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            min-width: 300px;
-            max-width: 500px;
-            background: var(--color-surface, #ffffff);
-            color: var(--color-text, #1a1a1a);
-            border: 1px solid var(--color-border, #e0e0e0);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-            border-left: 4px solid var(--color-primary, #007bff);
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification-success {
-            border-left-color: var(--color-success, #28a745);
-            background: rgba(40, 167, 69, 0.05);
-        }
-        
-        .notification-error {
-            border-left-color: var(--color-error, #dc3545);
-            background: rgba(220, 53, 69, 0.05);
-        }
-        
-        .notification-warning {
-            border-left-color: var(--color-warning, #ffc107);
-            background: rgba(255, 193, 7, 0.05);
-        }
-        
-        .notification-info {
-            border-left-color: var(--color-info, #007bff);
-            background: rgba(0, 123, 255, 0.05);
+        /* Fallback notification styles for when main CSS isn't loaded */
+        .notification:not([style]) {
+            position: fixed !important;
+            top: 20px !important;
+            right: 20px !important;
+            min-width: 300px !important;
+            max-width: 500px !important;
+            background: white !important;
+            color: #1a1a1a !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            z-index: 10000 !important;
+            padding: 0 !important;
         }
         
         .notification-content {
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            padding: 15px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
         }
         
         .notification-icon {
-            font-size: 18px;
-            flex-shrink: 0;
-            color: var(--color-text, #1a1a1a);
+            font-size: 18px !important;
+            flex-shrink: 0 !important;
         }
         
         .notification-message {
-            flex-grow: 1;
-            font-size: 14px;
-            line-height: 1.4;
-            color: var(--color-text, #1a1a1a);
-            font-weight: 500;
+            flex-grow: 1 !important;
+            font-size: 14px !important;
+            line-height: 1.4 !important;
+            font-weight: 500 !important;
         }
         
         .notification-close {
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 4px;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--color-text-secondary, #666);
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-        
-        .notification-close:hover {
-            background: rgba(0, 0, 0, 0.05);
-            color: var(--color-text, #333);
-        }
-        
-        .notification-actions {
-            display: flex;
-            gap: 8px;
-            margin-left: 10px;
-        }
-        
-        .notification-btn {
-            padding: 6px 12px;
-            border: 1px solid var(--color-border, #ddd);
-            background: var(--color-surface, white);
-            color: var(--color-text, #1a1a1a);
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-        
-        .notification-btn:hover {
-            background: var(--color-secondary, #f5f5f5);
-        }
-        
-        .notification-confirm {
-            background: var(--color-primary, #007bff);
-            color: var(--color-btn-primary-text, white);
-            border-color: var(--color-primary, #007bff);
-        }
-        
-        .notification-confirm:hover {
-            background: var(--color-primary-hover, #0056b3);
-            border-color: var(--color-primary-hover, #0056b3);
-        }
-        
-        .notification-progress-bar {
-            width: 100%;
-            height: 4px;
-            background: var(--color-secondary, #f0f0f0);
-            border-radius: 2px;
-            overflow: hidden;
-            margin: 5px 0;
-        }
-        
-        .notification-progress-fill {
-            height: 100%;
-            background: var(--color-primary, #007bff);
-            transition: width 0.3s ease;
-        }
-        
-        .notification-progress-text {
-            font-size: 12px;
-            color: var(--color-text-secondary, #666);
-            font-weight: 500;
+            background: none !important;
+            border: none !important;
+            font-size: 18px !important;
+            cursor: pointer !important;
+            padding: 4px !important;
+            width: 24px !important;
+            height: 24px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #666 !important;
+            border-radius: 4px !important;
         }
         
         .loading-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--color-secondary, #f3f3f3);
-            border-top: 2px solid var(--color-primary, #007bff);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            display: inline-block !important;
+            width: 16px !important;
+            height: 16px !important;
+            border: 2px solid #f3f3f3 !important;
+            border-top: 2px solid #007bff !important;
+            border-radius: 50% !important;
+            animation: spin 1s linear infinite !important;
         }
         
         @keyframes spin {

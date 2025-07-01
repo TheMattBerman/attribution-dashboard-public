@@ -164,6 +164,16 @@ function initializeChart() {
     });
 }
 
+// Helper function to update chart data and labels
+function updateChartData(timeframe) {
+    if (!mentionsChart || !dashboardState.mentionsData[timeframe]) return;
+    
+    const data = dashboardState.mentionsData[timeframe];
+    mentionsChart.data.labels = data.map(d => d.day);
+    mentionsChart.data.datasets[0].data = data.map(d => d.mentions);
+    mentionsChart.update();
+}
+
 function updateChart(timeframe) {
     if (!mentionsChart) {
         initializeChart();
@@ -171,22 +181,12 @@ function updateChart(timeframe) {
     }
     
     currentTimeframe = timeframe;
-    const data = dashboardState.mentionsData[timeframe];
-    
-    mentionsChart.data.labels = data.map(d => d.day);
-    mentionsChart.data.datasets[0].data = data.map(d => d.mentions);
-    mentionsChart.update();
+    updateChartData(timeframe);
 }
 
 function refreshChart() {
     if (mentionsChart) {
-        const data = currentTimeframe === '7d' ? 
-            dashboardState.mentionsData['7d'] : 
-            dashboardState.mentionsData['30d'];
-        
-        mentionsChart.data.labels = data.map(d => d.day);
-        mentionsChart.data.datasets[0].data = data.map(d => d.mentions);
-        mentionsChart.update();
+        updateChartData(currentTimeframe);
     }
 }
 
@@ -210,40 +210,111 @@ function populateCampaigns() {
     container.innerHTML = '';
     
     dashboardState.campaigns.forEach((campaign, index) => {
-        const campaignDiv = document.createElement('div');
-        campaignDiv.className = 'campaign-item';
-        campaignDiv.innerHTML = `
-            <div class="campaign-header">
-                <h4>${campaign.name}</h4>
-                <div class="campaign-actions">
-                    <button onclick="editCampaign(${index})" class="btn-small">Edit</button>
-                    <button onclick="deleteCampaign(${index})" class="btn-small btn-danger">Delete</button>
-                </div>
-            </div>
-            <div class="campaign-stats">
-                <div class="stat">
-                    <span class="stat-label">Search Delta:</span>
-                    <span class="stat-value ${campaign.brandedSearchDelta.startsWith('+') ? 'positive' : 'negative'}">
-                        ${campaign.brandedSearchDelta}
-                    </span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Mentions:</span>
-                    <span class="stat-value">${campaign.mentions}</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Signups:</span>
-                    <span class="stat-value">${campaign.signups}</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Buzz:</span>
-                    <span class="stat-value">${campaign.communityBuzz}</span>
-                </div>
-            </div>
-            <div class="campaign-notes">${campaign.notes}</div>
-        `;
+        const campaignDiv = createCampaignElement(campaign, index);
         container.appendChild(campaignDiv);
     });
+}
+
+// Helper function to create campaign elements securely
+function createCampaignElement(campaign, index) {
+    const campaignDiv = document.createElement('div');
+    campaignDiv.className = 'campaign-item';
+    
+    // Create campaign header
+    const header = document.createElement('div');
+    header.className = 'campaign-header';
+    
+    const title = document.createElement('h4');
+    title.textContent = campaign.name; // Safe text content
+    
+    const actions = document.createElement('div');
+    actions.className = 'campaign-actions';
+    
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-small';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => editCampaign(index));
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-small btn-danger';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', () => deleteCampaign(index));
+    
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+    header.appendChild(title);
+    header.appendChild(actions);
+    
+    // Create campaign stats
+    const stats = document.createElement('div');
+    stats.className = 'campaign-stats';
+    
+    // Search Delta stat
+    const deltaStat = createStatElement('Search Delta:', campaign.brandedSearchDelta);
+    const deltaValue = deltaStat.querySelector('.stat-value');
+    deltaValue.className = `stat-value ${campaign.brandedSearchDelta.startsWith('+') ? 'positive' : 'negative'}`;
+    stats.appendChild(deltaStat);
+    
+    // Other stats
+    stats.appendChild(createStatElement('Mentions:', campaign.mentions));
+    stats.appendChild(createStatElement('Signups:', campaign.signups));
+    stats.appendChild(createStatElement('Buzz:', campaign.communityBuzz));
+    
+    // Create campaign notes
+    const notes = document.createElement('div');
+    notes.className = 'campaign-notes';
+    notes.textContent = campaign.notes; // Safe text content
+    
+    // Assemble the campaign element
+    campaignDiv.appendChild(header);
+    campaignDiv.appendChild(stats);
+    campaignDiv.appendChild(notes);
+    
+    return campaignDiv;
+}
+
+// Helper function to create stat elements securely
+function createStatElement(label, value) {
+    const stat = document.createElement('div');
+    stat.className = 'stat';
+    
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'stat-label';
+    labelSpan.textContent = label;
+    
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'stat-value';
+    valueSpan.textContent = value; // Safe text content
+    
+    stat.appendChild(labelSpan);
+    stat.appendChild(valueSpan);
+    
+    return stat;
+}
+
+// Helper function to create empty state elements securely
+function createEmptyStateElement(title, description, buttonText = null, buttonCallback = null) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    
+    const titleElement = document.createElement('h3');
+    titleElement.textContent = title; // Safe text content
+    
+    const descElement = document.createElement('p');
+    descElement.textContent = description; // Safe text content
+    
+    emptyState.appendChild(titleElement);
+    emptyState.appendChild(descElement);
+    
+    if (buttonText && buttonCallback) {
+        const button = document.createElement('button');
+        button.className = 'btn btn-primary';
+        button.textContent = buttonText; // Safe text content
+        button.addEventListener('click', buttonCallback);
+        emptyState.appendChild(button);
+    }
+    
+    return emptyState;
 }
 
 function populateEchoes() {
@@ -253,22 +324,63 @@ function populateEchoes() {
     container.innerHTML = '';
     
     dashboardState.echoes.forEach((echo, index) => {
-        const echoDiv = document.createElement('div');
-        echoDiv.className = 'echo-item';
-        echoDiv.innerHTML = `
-            <div class="echo-header">
-                <span class="echo-type">${echo.type}</span>
-                <span class="echo-time">${echo.timestamp}</span>
-                <div class="echo-actions">
-                    <button onclick="editEcho(${index})" class="btn-small">Edit</button>
-                    <button onclick="deleteEcho(${index})" class="btn-small btn-danger">Delete</button>
-                </div>
-            </div>
-            <div class="echo-content">${echo.content}</div>
-            <div class="echo-source">Source: ${echo.source}</div>
-        `;
+        const echoDiv = createEchoElement(echo, index);
         container.appendChild(echoDiv);
     });
+}
+
+// Helper function to create echo elements securely
+function createEchoElement(echo, index) {
+    const echoDiv = document.createElement('div');
+    echoDiv.className = 'echo-item';
+    
+    // Create echo header
+    const header = document.createElement('div');
+    header.className = 'echo-header';
+    
+    const typeSpan = document.createElement('span');
+    typeSpan.className = 'echo-type';
+    typeSpan.textContent = echo.type; // Safe text content
+    
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'echo-time';
+    timeSpan.textContent = echo.timestamp; // Safe text content
+    
+    const actions = document.createElement('div');
+    actions.className = 'echo-actions';
+    
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-small';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => editEcho(index));
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-small btn-danger';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', () => deleteEcho(index));
+    
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+    header.appendChild(typeSpan);
+    header.appendChild(timeSpan);
+    header.appendChild(actions);
+    
+    // Create echo content
+    const content = document.createElement('div');
+    content.className = 'echo-content';
+    content.textContent = echo.content; // Safe text content
+    
+    // Create echo source
+    const source = document.createElement('div');
+    source.className = 'echo-source';
+    source.textContent = `Source: ${echo.source}`; // Safe text content
+    
+    // Assemble the echo element
+    echoDiv.appendChild(header);
+    echoDiv.appendChild(content);
+    echoDiv.appendChild(source);
+    
+    return echoDiv;
 }
 
 // Modal Management
@@ -503,13 +615,13 @@ function checkEchoesEmptyState() {
     const echoes = dashboardState.echoes || [];
     
     if (container && echoes.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <h3>No attribution echoes yet</h3>
-                <p>Start logging customer feedback and mentions to track attribution signals.</p>
-                <button onclick="addEchoEntry()" class="btn btn-primary">Add First Echo</button>
-            </div>
-        `;
+        const emptyState = createEmptyStateElement(
+            'No attribution echoes yet',
+            'Start logging customer feedback and mentions to track attribution signals.',
+            'Add First Echo',
+            addEchoEntry
+        );
+        container.appendChild(emptyState);
     }
 }
 
@@ -518,13 +630,13 @@ function checkCampaignsEmptyState() {
     const campaigns = dashboardState.campaigns || [];
     
     if (container && campaigns.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <h3>No campaigns tracked yet</h3>
-                <p>Add your marketing campaigns to track their attribution impact.</p>
-                <button onclick="addCampaign()" class="btn btn-primary">Add First Campaign</button>
-            </div>
-        `;
+        const emptyState = createEmptyStateElement(
+            'No campaigns tracked yet',
+            'Add your marketing campaigns to track their attribution impact.',
+            'Add First Campaign',
+            addCampaign
+        );
+        container.appendChild(emptyState);
     }
 }
 
@@ -533,12 +645,11 @@ function checkMentionsEmptyState() {
     const mentions = dashboardState.liveFeed?.mentions || [];
     
     if (container && mentions.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <h3>No mentions found</h3>
-                <p>Connect your APIs or import data to see brand mentions here.</p>
-            </div>
-        `;
+        const emptyState = createEmptyStateElement(
+            'No mentions found',
+            'Connect your APIs or import data to see brand mentions here.'
+        );
+        container.appendChild(emptyState);
     }
 }
 
@@ -714,3 +825,7 @@ window.handleEchoFormSubmit = handleEchoFormSubmit;
 window.setupErrorHandling = setupErrorHandling;
 window.safeFunction = safeFunction;
 window.checkForEmptyStates = checkForEmptyStates;
+window.createCampaignElement = createCampaignElement;
+window.createEchoElement = createEchoElement;
+window.createStatElement = createStatElement;
+window.createEmptyStateElement = createEmptyStateElement;

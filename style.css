@@ -1345,7 +1345,7 @@ select.form-control {
   gap: var(--space-8);
 }
 
-/* Notifications - Legacy styles (keeping for backwards compatibility) */
+/* Notifications container (for grouped notifications - currently unused) */
 .notifications {
   position: fixed;
   top: var(--space-20);
@@ -1354,9 +1354,11 @@ select.form-control {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+  pointer-events: none; /* Allow clicks to pass through to individual notifications */
 }
 
-.notification {
+/* Legacy notification styles - these apply when notifications are inside .notifications container */
+.notifications .notification {
   padding: var(--space-16);
   border-radius: var(--radius-base);
   background: var(--color-surface);
@@ -1368,24 +1370,25 @@ select.form-control {
   max-width: 400px;
   position: relative;
   overflow: hidden;
+  pointer-events: auto;
 }
 
-.notification.success {
+.notifications .notification.success {
   border-left: 4px solid var(--color-success);
   background: rgba(var(--color-success-rgb), 0.05);
 }
 
-.notification.error {
+.notifications .notification.error {
   border-left: 4px solid var(--color-error);
   background: rgba(var(--color-error-rgb), 0.05);
 }
 
-.notification.warning {
+.notifications .notification.warning {
   border-left: 4px solid var(--color-warning);
   background: rgba(var(--color-warning-rgb), 0.05);
 }
 
-.notification.info {
+.notifications .notification.info {
   border-left: 4px solid var(--color-info);
   background: rgba(var(--color-info-rgb), 0.05);
 }
@@ -2234,23 +2237,31 @@ select.form-control {
 }
 
 .notification {
+    position: fixed;
+    top: var(--space-20);
+    right: var(--space-20);
+    z-index: 10000;
+    min-width: 300px;
+    max-width: 400px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    padding: var(--space-16);
+    padding: 0;
     margin-bottom: var(--space-8);
     box-shadow: var(--shadow-lg);
     cursor: pointer;
     transition: all var(--duration-normal) var(--ease-standard);
-    position: relative;
     overflow: hidden;
     color: var(--color-text);
+    transform: translateX(100%);
+    opacity: 0;
 }
 
 .notification-content {
     display: flex;
     align-items: flex-start;
     gap: var(--space-12);
+    padding: var(--space-16);
 }
 
 .notification-icon {
@@ -2321,6 +2332,8 @@ select.form-control {
 }
 
 .notification.show {
+    transform: translateX(0);
+    opacity: 1;
     animation: slideInRight var(--duration-normal) var(--ease-standard);
 }
 
@@ -2440,6 +2453,8 @@ select.form-control {
         opacity: 1;
     }
 }
+
+/* Multiple notifications are positioned dynamically via JavaScript */
 
 /* Enhanced Connection Status */
 .connection-status {
