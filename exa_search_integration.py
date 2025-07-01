@@ -115,7 +115,7 @@ class ExaSearchIntegration:
                 "facebook.com",
                 "spam-domain.com"
             ],
-            "includeText": true,
+            "includeText": True,
             "text": {
                 "maxCharacters": 2000,
                 "includeHtmlTags": False
