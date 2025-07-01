@@ -287,7 +287,7 @@ function addCampaign() {
 }
 
 function addEchoEntry() {
-    document.getElementById('echoModal').style.display = 'block';
+    document.getElementById('addEchoModal').style.display = 'block';
     document.getElementById('echoForm').reset();
     document.getElementById('echoIndex').value = '';
 }
@@ -316,7 +316,7 @@ function editEcho(index) {
     document.getElementById('echoSource').value = echo.source;
     document.getElementById('echoIndex').value = index;
     
-    document.getElementById('echoModal').style.display = 'block';
+    document.getElementById('addEchoModal').style.display = 'block';
 }
 
 function deleteCampaign(index) {
@@ -403,7 +403,7 @@ function handleEchoFormSubmit(event) {
     }
     
     populateEchoes();
-    closeModal('echoModal');
+    closeModal('addEchoModal');
     
     if (typeof saveToLocalStorage === 'function') {
         saveToLocalStorage();

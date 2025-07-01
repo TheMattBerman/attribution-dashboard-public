@@ -1,5 +1,7 @@
 # Attribution Dashboard
 
+![Social Listening Dashboard](https://github.com/user-attachments/assets/dashboard-preview.png)
+
 A comprehensive social media monitoring and attribution tracking dashboard that helps you understand where your brand mentions are coming from across the internet.
 
 ## Features
@@ -79,6 +81,54 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is open source and available under the [MIT License](LICENSE).
+
+## 🛠 Roadmap & To-Do
+
+### 🗄 **Database Integration**
+
+- **Supabase Integration**: Add persistent data storage for historical tracking, saved reports, and user preferences
+- **Data Export**: Enable CSV/JSON exports of historical data
+- **Custom Date Ranges**: Store and retrieve data for custom time periods
+
+### 🌐 **Enhanced Web Monitoring**
+
+- **Comprehensive Exa Integration**: Expand beyond basic mentions to include sentiment analysis, source categorization, and trend detection
+- **Advanced Web Scraping**: Monitor news sites, forums, and industry publications
+- **Competitor Tracking**: Compare your brand mentions against competitors
+
+### 📱 **Extended Social Media Coverage**
+
+- **LinkedIn Mentions**: Track professional discussions and industry content
+- **Facebook Mentions**: Monitor public posts and page interactions
+- **Instagram Mentions**: Track hashtags, stories, and public posts
+- **X (Twitter) Mentions**: Real-time tweet monitoring and engagement tracking
+
+> **Note**: Public APIs are not available for all social platforms. Additional integrations may require:
+>
+> - Custom development with specialized API keys
+> - Third-party services like RapidAPI or Apify
+> - Web scraping solutions with proper rate limiting and compliance
+
+### 🤖 **AI & Analytics Enhancements**
+
+- **Advanced Sentiment Analysis**: Multi-language support and emotion detection
+- **Trend Prediction**: AI-powered forecasting based on historical data
+- **Automated Reporting**: Scheduled reports with key insights and recommendations
+- **Smart Alerts**: Custom notifications for significant changes or opportunities
+
+### 🔗 **Additional Integrations**
+
+- **More Email Platforms**: Constant Contact, AWeber, GetResponse
+- **E-commerce Platforms**: Shopify, WooCommerce attribution tracking
+- **Ad Platforms**: Google Ads, Facebook Ads, LinkedIn Ads performance correlation
+- **Customer Support**: Zendesk, Intercom, Freshdesk integration
+
+### 📊 **Advanced Features**
+
+- **Multi-Brand Support**: Monitor multiple brands from one dashboard
+- **Team Collaboration**: User roles, shared dashboards, and commenting
+- **Custom Metrics**: Define and track brand-specific KPIs
+- **API Rate Optimization**: Smart caching and request batching for better performance
 
 ## Support
 

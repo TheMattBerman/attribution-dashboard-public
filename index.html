@@ -610,6 +610,44 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
                     </div>
                 </div>
 
+                <!-- Add Campaign Modal -->
+                <div id="campaignModal" class="modal">
+                    <div class="modal-content">
+                        <h3>Add Campaign</h3>
+                        <form id="campaignForm">
+                            <div class="form-group">
+                                <label class="form-label">Campaign Name</label>
+                                <input type="text" class="form-control" id="campaignName" placeholder="Enter campaign name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Search Delta</label>
+                                <input type="text" class="form-control" id="campaignDelta" placeholder="e.g., +23%">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Mentions</label>
+                                <input type="number" class="form-control" id="campaignMentions" placeholder="Enter mention count">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sign-ups</label>
+                                <input type="number" class="form-control" id="campaignSignups" placeholder="Enter sign-up count">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Community Buzz</label>
+                                <input type="text" class="form-control" id="campaignBuzz" placeholder="e.g., High, Medium, Low">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-control" id="campaignNotes" rows="3" placeholder="Add campaign notes..."></textarea>
+                            </div>
+                            <input type="hidden" id="campaignIndex" value="">
+                            <div class="form-group flex gap-8">
+                                <button type="button" class="btn btn--outline" onclick="closeModal('campaignModal')">Cancel</button>
+                                <button type="submit" class="btn btn--primary">Add Campaign</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
             </section>
 
             <!-- Live Mentions Feed -->
