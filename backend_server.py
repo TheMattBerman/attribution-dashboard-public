@@ -16,6 +16,7 @@ from typing import Dict, List, Any
 # Import our existing integrations
 from scrape_creators_integration import ScrapeCreatorsIntegration
 from exa_search_integration import ExaSearchIntegration
+from threads_integration import ThreadsIntegration
 
 # Load environment variables
 load_dotenv()
@@ -80,6 +81,7 @@ scrape_creators = None
 exa_search = None
 ga4_analytics = None
 openrouter_sentiment = None
+threads_integration = None
 
 if SCRAPE_CREATORS_API_KEY:
     try:
@@ -87,6 +89,13 @@ if SCRAPE_CREATORS_API_KEY:
         logger.info("ScrapeCreators integration initialized")
     except Exception as e:
         logger.error(f"Failed to initialize ScrapeCreators: {e}")
+
+    # Also initialize Threads integration with the same API key
+    try:
+        threads_integration = ThreadsIntegration(SCRAPE_CREATORS_API_KEY, BRAND_NAME)
+        logger.info("Threads integration initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize Threads: {e}")
 
 if EXA_API_KEY:
     try:
@@ -241,6 +250,30 @@ def test_api_connection():
                 return jsonify({
                     'status': 'error',
                     'message': f'ScrapeCreators API connection failed: {str(e)}'
+                }), 400
+        
+        elif service == 'threads':
+            try:
+                brand_name = get_brand_name()
+                test_integration = ThreadsIntegration(api_key, brand_name)
+                # Test with a simple search
+                result = test_integration.search_threads(brand_name, trim=True)
+                
+                # Store successful key in session
+                if 'api_keys' not in session:
+                    session['api_keys'] = {}
+                session['api_keys'][service] = api_key
+                
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Threads API connected successfully',
+                    'data': {'results_count': len(result.get('posts', []))}
+                })
+            except Exception as e:
+                logger.error(f"Threads API test failed: {e}")
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Threads API connection failed: {str(e)}'
                 }), 400
         
         elif service == 'exa_search':
@@ -427,7 +460,7 @@ def fetch_mentions():
                     'total_count': len(filtered_mentions),
                     'source': 'cache',
                     'cache_timestamp': cached_data['timestamp'],
-                    'platforms_searched': [platform] if platform != 'all' else ['tiktok', 'youtube', 'reddit', 'web']
+                    'platforms_searched': [platform] if platform != 'all' else ['tiktok', 'youtube', 'reddit', 'threads', 'web']
                 })
         
         # If no cache or force refresh, return empty data and suggest using refresh endpoint
@@ -437,7 +470,7 @@ def fetch_mentions():
             'total_count': 0,
             'source': 'empty',
             'message': 'No cached data available. Use /api/refresh-mentions to fetch new data.',
-            'platforms_searched': [platform] if platform != 'all' else ['tiktok', 'youtube', 'reddit', 'web']
+            'platforms_searched': [platform] if platform != 'all' else ['tiktok', 'youtube', 'reddit', 'threads', 'web']
         })
         
     except Exception as e:
@@ -484,6 +517,30 @@ def refresh_mentions():
             except Exception as e:
                 logger.error(f"Error fetching from ScrapeCreators: {e}")
         
+        # Fetch from Threads
+        threads_key = session_keys.get('threads') or session_keys.get('scrape_creators') or SCRAPE_CREATORS_API_KEY
+        if threads_key and (platform == 'all' or platform == 'threads'):
+            try:
+                brand_name = get_brand_name()
+                threads_int = ThreadsIntegration(threads_key, brand_name)
+                threads_mentions = threads_int.fetch_threads_mentions(days_back, 50)
+                # Normalize Threads data format
+                for mention in threads_mentions:
+                    # Ensure timestamp field exists (Threads uses 'created_at')
+                    if 'created_at' in mention and 'timestamp' not in mention:
+                        mention['timestamp'] = mention['created_at']
+                    # Ensure title field exists for frontend
+                    if 'title' not in mention:
+                        mention['title'] = mention.get('content', '')[:100] + '...' if len(mention.get('content', '')) > 100 else mention.get('content', '')
+                    # Add source field if missing
+                    if 'source' not in mention:
+                        mention['source'] = mention.get('platform', 'unknown')
+                
+                all_mentions.extend(threads_mentions)
+                logger.info(f"Fetched {len(threads_mentions)} mentions from Threads")
+            except Exception as e:
+                logger.error(f"Error fetching from Threads: {e}")
+        
         # Fetch from Exa Search
         exa_key = session_keys.get('exa_search') or EXA_API_KEY
         if exa_key and (platform == 'all' or platform == 'web'):
@@ -521,7 +578,7 @@ def refresh_mentions():
             'total_count': len(all_mentions),
             'source': 'live_api',
             'cached': True,
-            'platforms_searched': [platform] if platform != 'all' else ['tiktok', 'youtube', 'reddit', 'web']
+            'platforms_searched': [platform] if platform != 'all' else ['tiktok', 'youtube', 'reddit', 'threads', 'web']
         })
         
     except Exception as e:
@@ -622,7 +679,7 @@ def get_dashboard_metrics():
         total_mentions = len(all_mentions)
         
         # Community engagement (social platforms)
-        community_mentions = [m for m in all_mentions if m.get('platform') in ['tiktok', 'youtube', 'reddit', 'discord']]
+        community_mentions = [m for m in all_mentions if m.get('platform') in ['tiktok', 'youtube', 'reddit', 'threads', 'discord']]
         metrics['community_engagement'] = len(community_mentions)
         
         # Inbound messages (web mentions that look like inquiries)
@@ -723,6 +780,7 @@ def get_dashboard_metrics():
                     'brand_name': get_brand_name(),
                     'mentions_breakdown': {
                         'scrape_creators': len([m for m in all_mentions if m.get('platform') in ['tiktok', 'youtube', 'reddit']]),
+                        'threads': len([m for m in all_mentions if m.get('platform') == 'threads']),
                         'exa_search': len([m for m in all_mentions if m.get('platform') == 'web'])
                     }
                 }
@@ -744,6 +802,7 @@ def brand_config():
             'brand_name': get_brand_name(),
             'configured_apis': {
                 'scrape_creators': bool(session.get('api_keys', {}).get('scrape_creators') or SCRAPE_CREATORS_API_KEY),
+                'threads': bool(session.get('api_keys', {}).get('threads') or session.get('api_keys', {}).get('scrape_creators') or SCRAPE_CREATORS_API_KEY),
                 'exa_search': bool(session.get('api_keys', {}).get('exa_search') or EXA_API_KEY)
             }
         })
@@ -849,6 +908,7 @@ if __name__ == '__main__':
     print("🚀 Attribution Dashboard Backend Server")
     print(f"Brand: {BRAND_NAME}")
     print(f"ScrapeCreators API: {'✓ Connected' if SCRAPE_CREATORS_API_KEY else '✗ Not configured'}")
+    print(f"Threads API: {'✓ Connected' if threads_integration else '✗ Not configured'}")
     print(f"Exa Search API: {'✓ Connected' if EXA_API_KEY else '✗ Not configured'}")
     print(f"GA4 Analytics: {'✓ Connected' if ga4_analytics else '✗ Not configured'}")
     print(f"AI Sentiment: {'✓ Enhanced (' + OPENROUTER_MODEL + ')' if openrouter_sentiment else '✗ Basic Rule-based'}")
