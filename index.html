@@ -363,6 +363,7 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
                 <li><a href="#" class="nav-link" data-section="integrations">API Integrations</a></li>
                 <li><a href="#" class="nav-link" data-section="social">Social Monitoring</a></li>
                 <li><a href="#" class="nav-link" data-section="prompts">Prompts & Worksheets</a></li>
+                <li><a href="#" class="nav-link" data-section="recurringReportsSection">Recurring Reports</a></li>
             </ul>
         </nav>
 
@@ -951,7 +952,178 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
                     </div>
                 </div>
             </section>
+
+            <!-- Recurring Reports Section -->
+            <section id="recurringReportsSection" class="dashboard-section">
+                <div class="section-header">
+                    <h2>📊 Recurring Reports</h2>
+                    <div class="section-actions">
+                        <button class="btn btn--primary btn--sm" id="createReportBtn">Create Report</button>
+                        <button class="btn btn--outline btn--sm" id="createFromTemplateBtn">Use Template</button>
+                        <button class="btn btn--outline btn--sm" id="refreshReportsBtn">Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Status Overview -->
+                <div class="reports-status">
+                    <div id="reportsStatus">
+                        <!-- Status will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Reports List -->
+                <div class="reports-container">
+                    <div id="reportsList">
+                        <!-- Reports will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
         </main>
+    </div>
+
+    <!-- Recurring Reports Modals -->
+    
+    <!-- Create Report Modal -->
+    <div id="createReportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Recurring Report</h3>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <form id="createReportForm" onsubmit="event.preventDefault(); createReport();">
+                <div class="form-group">
+                    <label for="reportName">Report Name *</label>
+                    <input type="text" id="reportName" name="name" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reportDescription">Description</label>
+                    <textarea id="reportDescription" name="description" class="form-control" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Data Sources *</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="data_sources" value="scrape_creators"> Social Media (ScrapeCreators)</label>
+                        <label><input type="checkbox" name="data_sources" value="exa_search"> Web Mentions (Exa Search)</label>
+                        <label><input type="checkbox" name="data_sources" value="ga4_analytics"> Google Analytics 4</label>
+                        <label><input type="checkbox" name="data_sources" value="live_feed"> Live Feed Data</label>
+                        <label><input type="checkbox" name="data_sources" value="dashboard_signals"> Dashboard Signals</label>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dateRange">Date Range (days)</label>
+                        <input type="number" id="dateRange" name="date_range" value="7" min="1" max="365" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="outputFormat">Output Format</label>
+                        <select id="outputFormat" name="output_format" class="form-control">
+                            <option value="csv">CSV</option>
+                            <option value="json">JSON</option>
+                            <option value="html">HTML</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Schedule</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <select name="schedule_type" class="form-control">
+                                <option value="interval">Interval</option>
+                                <option value="cron">Cron</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <input type="number" name="interval_value" value="1" min="1" class="form-control" placeholder="Every">
+                        </div>
+                        <div class="form-group">
+                            <select name="interval_type" class="form-control">
+                                <option value="hours">Hours</option>
+                                <option value="days">Days</option>
+                                <option value="weeks">Weeks</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><input type="checkbox" name="enabled" checked> Enable report</label>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn--outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Create Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Template Modal -->
+    <div id="templateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create from Template</h3>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <form onsubmit="event.preventDefault(); createFromTemplate();">
+                <div class="form-group">
+                    <label for="templateSelect">Select Template</label>
+                    <select id="templateSelect" class="form-control" onchange="onTemplateSelect()">
+                        <!-- Options populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div id="templateInfo">
+                    <!-- Template information populated by JavaScript -->
+                </div>
+                
+                <div class="form-group">
+                    <label for="templateReportName">Report Name</label>
+                    <input type="text" id="templateReportName" class="form-control" placeholder="Enter custom name or leave blank for default">
+                </div>
+                
+                <div class="form-group">
+                    <label>Schedule</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="number" id="templateScheduleValue" value="1" min="1" class="form-control" placeholder="Every">
+                        </div>
+                        <div class="form-group">
+                            <select id="templateScheduleType" class="form-control">
+                                <option value="hours">Hours</option>
+                                <option value="days">Days</option>
+                                <option value="weeks">Weeks</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn--outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Create Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Report Execution History</h3>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div id="historyContent">
+                <!-- History content populated by JavaScript -->
+            </div>
+        </div>
     </div>
 
     <!-- Notification System -->
@@ -980,6 +1152,7 @@ HUBSPOT_API_KEY=your_hubspot_api_key_here</code></pre>
     <script src="js/components/signal-widgets.js"></script>
     <script src="js/components/live-feed.js"></script>
     <script src="js/components/missing-functions.js"></script>
+    <script src="js/components/recurring-reports.js"></script>
     
     <!-- Diagnostic Tools -->
     <script src="js/utils/live-feed-diagnostic.js"></script>

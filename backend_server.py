@@ -17,6 +17,15 @@ from typing import Dict, List, Any
 from scrape_creators_integration import ScrapeCreatorsIntegration
 from exa_search_integration import ExaSearchIntegration
 
+# Import recurring reports modules
+try:
+    from scheduler_service import get_scheduler, shutdown_scheduler
+    from report_config import ReportConfigValidator, ReportConfigManager
+    RECURRING_REPORTS_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Recurring reports not available: {e}")
+    RECURRING_REPORTS_AVAILABLE = False
+
 # Load environment variables
 load_dotenv()
 
@@ -845,6 +854,391 @@ def sentiment_config():
         'status': 'enhanced' if openrouter_sentiment else 'fallback'
     })
 
+# Recurring Reports API Endpoints
+@app.route('/api/reports', methods=['GET'])
+def list_reports():
+    """Get all recurring reports"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available. Install dependencies: pip install APScheduler croniter'
+        }), 503
+    
+    try:
+        scheduler = get_scheduler()
+        reports = scheduler.list_reports()
+        
+        return jsonify({
+            'status': 'success',
+            'data': reports,
+            'total_count': len(reports)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error listing reports: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to list reports: {str(e)}'
+        }), 500
+
+@app.route('/api/reports', methods=['POST'])
+def create_report():
+    """Create a new recurring report"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available. Install dependencies: pip install APScheduler croniter'
+        }), 503
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No data provided'
+            }), 400
+        
+        # Add brand name to query config if not present
+        if 'query_config' in data and 'brand_name' not in data['query_config']:
+            data['query_config']['brand_name'] = get_brand_name()
+        
+        # Validate configuration
+        validation = ReportConfigValidator.validate_report_config(data)
+        if not validation['valid']:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid report configuration',
+                'errors': validation['errors'],
+                'warnings': validation['warnings']
+            }), 400
+        
+        # Create the report
+        scheduler = get_scheduler()
+        report_id = scheduler.create_report(data)
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Report created successfully',
+            'report_id': report_id,
+            'warnings': validation['warnings']
+        })
+        
+    except Exception as e:
+        logger.error(f"Error creating report: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to create report: {str(e)}'
+        }), 500
+
+@app.route('/api/reports/<report_id>', methods=['GET'])
+def get_report(report_id):
+    """Get a specific report configuration"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available'
+        }), 503
+    
+    try:
+        scheduler = get_scheduler()
+        report = scheduler.get_report(report_id)
+        
+        if not report:
+            return jsonify({
+                'status': 'error',
+                'message': 'Report not found'
+            }), 404
+        
+        return jsonify({
+            'status': 'success',
+            'data': report
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting report {report_id}: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to get report: {str(e)}'
+        }), 500
+
+@app.route('/api/reports/<report_id>', methods=['PUT'])
+def update_report(report_id):
+    """Update a report configuration"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available'
+        }), 503
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No data provided'
+            }), 400
+        
+        # Validate if this is a complete config update
+        if 'query_config' in data or 'schedule' in data:
+            validation = ReportConfigValidator.validate_report_config(data)
+            if not validation['valid']:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Invalid report configuration',
+                    'errors': validation['errors']
+                }), 400
+        
+        scheduler = get_scheduler()
+        success = scheduler.update_report(report_id, data)
+        
+        if not success:
+            return jsonify({
+                'status': 'error',
+                'message': 'Report not found'
+            }), 404
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Report updated successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error updating report {report_id}: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to update report: {str(e)}'
+        }), 500
+
+@app.route('/api/reports/<report_id>', methods=['DELETE'])
+def delete_report(report_id):
+    """Delete a report"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available'
+        }), 503
+    
+    try:
+        scheduler = get_scheduler()
+        success = scheduler.delete_report(report_id)
+        
+        if not success:
+            return jsonify({
+                'status': 'error',
+                'message': 'Report not found'
+            }), 404
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Report deleted successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error deleting report {report_id}: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to delete report: {str(e)}'
+        }), 500
+
+@app.route('/api/reports/<report_id>/run', methods=['POST'])
+def run_report_now(report_id):
+    """Manually trigger a report execution"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available'
+        }), 503
+    
+    try:
+        scheduler = get_scheduler()
+        success = scheduler.run_report_now(report_id)
+        
+        if not success:
+            return jsonify({
+                'status': 'error',
+                'message': 'Report not found or execution failed'
+            }), 404
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Report execution triggered'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error running report {report_id}: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to run report: {str(e)}'
+        }), 500
+
+@app.route('/api/reports/<report_id>/history', methods=['GET'])
+def get_report_history(report_id):
+    """Get execution history for a specific report"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available'
+        }), 503
+    
+    try:
+        limit = int(request.args.get('limit', 50))
+        
+        scheduler = get_scheduler()
+        history = scheduler.get_report_history(report_id, limit)
+        
+        return jsonify({
+            'status': 'success',
+            'data': history,
+            'total_count': len(history)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting report history {report_id}: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to get report history: {str(e)}'
+        }), 500
+
+@app.route('/api/reports/templates', methods=['GET'])
+def get_report_templates():
+    """Get available report templates"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available'
+        }), 503
+    
+    try:
+        templates = ReportConfigManager.get_available_templates()
+        
+        # Add API requirements for each template
+        for template_name, template in templates.items():
+            requirements = ReportConfigManager.get_data_source_requirements(template['data_sources'])
+            template['api_requirements'] = requirements
+            
+            # Add suggested schedule
+            suggested_schedule = ReportConfigManager.suggest_schedule_for_data_sources(template['data_sources'])
+            template['suggested_schedule'] = suggested_schedule
+        
+        return jsonify({
+            'status': 'success',
+            'data': templates
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting report templates: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to get report templates: {str(e)}'
+        }), 500
+
+@app.route('/api/reports/templates/<template_name>', methods=['POST'])
+def create_report_from_template(template_name):
+    """Create a report from a template with customizations"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available'
+        }), 503
+    
+    try:
+        customizations = request.get_json() or {}
+        
+        # Add brand name if not provided
+        if 'query_config' not in customizations:
+            customizations['query_config'] = {}
+        if 'brand_name' not in customizations['query_config']:
+            customizations['query_config']['brand_name'] = get_brand_name()
+        
+        # Create config from template
+        config = ReportConfigManager.create_config_from_template(template_name, customizations)
+        
+        # Validate the configuration
+        validation = ReportConfigValidator.validate_report_config(config)
+        if not validation['valid']:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid template configuration',
+                'errors': validation['errors'],
+                'warnings': validation['warnings']
+            }), 400
+        
+        # Create the report
+        scheduler = get_scheduler()
+        report_id = scheduler.create_report(config)
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'Report created from {template_name} template',
+            'report_id': report_id,
+            'warnings': validation['warnings']
+        })
+        
+    except ValueError as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 400
+    except Exception as e:
+        logger.error(f"Error creating report from template {template_name}: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to create report from template: {str(e)}'
+        }), 500
+
+@app.route('/api/reports/status', methods=['GET'])
+def get_reports_status():
+    """Get scheduler status and statistics"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available'
+        }), 503
+    
+    try:
+        scheduler = get_scheduler()
+        status = scheduler.get_scheduler_status()
+        
+        return jsonify({
+            'status': 'success',
+            'data': status
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting reports status: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to get reports status: {str(e)}'
+        }), 500
+
+@app.route('/api/reports/history', methods=['GET'])
+def get_all_reports_history():
+    """Get execution history for all reports"""
+    if not RECURRING_REPORTS_AVAILABLE:
+        return jsonify({
+            'status': 'error',
+            'message': 'Recurring reports not available'
+        }), 503
+    
+    try:
+        limit = int(request.args.get('limit', 100))
+        
+        scheduler = get_scheduler()
+        history = scheduler.get_all_history(limit)
+        
+        return jsonify({
+            'status': 'success',
+            'data': history,
+            'total_count': len(history)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting all reports history: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to get reports history: {str(e)}'
+        }), 500
+
 if __name__ == '__main__':
     print("🚀 Attribution Dashboard Backend Server")
     print(f"Brand: {BRAND_NAME}")
@@ -852,6 +1246,7 @@ if __name__ == '__main__':
     print(f"Exa Search API: {'✓ Connected' if EXA_API_KEY else '✗ Not configured'}")
     print(f"GA4 Analytics: {'✓ Connected' if ga4_analytics else '✗ Not configured'}")
     print(f"AI Sentiment: {'✓ Enhanced (' + OPENROUTER_MODEL + ')' if openrouter_sentiment else '✗ Basic Rule-based'}")
+    print(f"Recurring Reports: {'✓ Available' if RECURRING_REPORTS_AVAILABLE else '✗ Not available'}")
     print("\nStarting server on http://localhost:8080")
     print("Frontend will be available at http://localhost:8080")
     
@@ -868,4 +1263,26 @@ if __name__ == '__main__':
         print("   3. Optionally set OPENROUTER_MODEL to choose your AI model")
         print("   4. Available models: Gemini, GPT-4, Claude, and more")
     
-    app.run(host='0.0.0.0', port=8080, debug=True) 
+    if not RECURRING_REPORTS_AVAILABLE:
+        print("\n📊 To enable recurring reports:")
+        print("   1. Install dependencies: pip install APScheduler croniter")
+        print("   2. Restart the server")
+        print("   3. Access report management at /reports section")
+    
+    try:
+        # Initialize scheduler if available
+        if RECURRING_REPORTS_AVAILABLE:
+            scheduler = get_scheduler()
+            print(f"📋 Recurring Reports: Scheduler initialized")
+        
+        app.run(host='0.0.0.0', port=8080, debug=True)
+    except KeyboardInterrupt:
+        print("\n🛑 Shutting down server...")
+        if RECURRING_REPORTS_AVAILABLE:
+            shutdown_scheduler()
+            print("📋 Scheduler shut down")
+    except Exception as e:
+        print(f"❌ Server error: {e}")
+        if RECURRING_REPORTS_AVAILABLE:
+            shutdown_scheduler()
+        raise 

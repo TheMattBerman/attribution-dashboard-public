@@ -74,6 +74,11 @@ function loadSectionData(sectionName) {
                 populatePrompts();
             }
             break;
+        case 'recurringReportsSection':
+            if (typeof initializeRecurringReports === 'function') {
+                initializeRecurringReports();
+            }
+            break;
         case 'integrations':
         case 'social':
         case 'sentimentTesting':
