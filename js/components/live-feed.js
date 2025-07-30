@@ -37,7 +37,7 @@ async function initializeLiveFeed() {
 
 // Generate sample mentions for demo purposes
 function generateSampleMentions() {
-    const platforms = ['twitter', 'reddit', 'discord', 'linkedin', 'web'];
+    const platforms = ['twitter', 'reddit', 'discord', 'linkedin', 'threads', 'web'];
     const sentiments = ['positive', 'neutral', 'negative'];
     const sampleContents = [
         'Just discovered YourBrand and loving the features!',
@@ -124,6 +124,7 @@ function getPlatformIcon(platform) {
         reddit: '🟠',
         discord: '💬',
         linkedin: '💼',
+        threads: '🧵',
         web: '🌐'
     };
     return icons[platform] || '📱';
