@@ -32,6 +32,10 @@ except ImportError:
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# Threads post URL pattern
+# Official documentation: https://developers.facebook.com/docs/threads/posts/
+THREADS_POST_URL_PATTERN = "https://www.threads.net/@{username}/post/{code}"
+
 class ThreadsIntegration:
     def __init__(self, api_key: str, brand_name: str):
         self.api_key = api_key
@@ -181,9 +185,9 @@ class ThreadsIntegration:
             else:
                 created_at = datetime.now().isoformat()
             
-            # Build Threads URL (approximation based on typical Threads URL structure)
+            # Build Threads URL using the official pattern
             code = threads_post.get('code', '')
-            threads_url = f"https://www.threads.net/@{username}/post/{code}" if username and code else ""
+            threads_url = THREADS_POST_URL_PATTERN.format(username=username, code=code) if username and code else ""
             
             # Extract media information
             media_type = threads_post.get('media_type', 19)  # 19 seems to be text post
