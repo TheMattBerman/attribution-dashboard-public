@@ -77,6 +77,26 @@ A comprehensive social media monitoring and attribution tracking dashboard that 
 
 5. **Open your browser** to `http://localhost:8080`
 
+## Import X/Twitter Mentions From CSV
+
+The dashboard can already import mention CSVs through the setup wizard and
+mentions template. Use this path when you want X/Twitter source evidence without
+adding another live API dependency.
+
+Required headers:
+
+```csv
+Date,Platform,Content,Sentiment,Engagement,Author,URL
+```
+
+Example file: [`examples/x-twitter-mentions-sample.csv`](examples/x-twitter-mentions-sample.csv)
+
+If your workflow uses OpenClaw, TweetClaw (`@xquik/tweetclaw`) can collect
+public X/Twitter search results, replies, profile context, follower samples, and
+media references. Map the reviewed results into the CSV headers above, then let
+this dashboard handle sentiment analysis, attribution scoring, charts, and
+exports.
+
 ## Required API Keys
 
 At minimum, you'll need:
